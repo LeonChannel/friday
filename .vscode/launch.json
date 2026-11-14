@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:friday}/Packages/FridayKit",
+            "name": "Debug friday (Packages/FridayKit)",
+            "target": "friday",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug friday (Packages/FridayKit)"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:friday}/Packages/FridayKit",
+            "name": "Release friday (Packages/FridayKit)",
+            "target": "friday",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release friday (Packages/FridayKit)"
+        }
+    ]
+}

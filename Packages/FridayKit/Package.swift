@@ -7,6 +7,7 @@ let package = Package(
     products: [
         .library(name: "FridayFeatures", targets: ["FridayFeatures"]),
         .library(name: "FridayInfrastructure", targets: ["FridayInfrastructure"]),
+        .executable(name: "friday", targets: ["friday-cli"]),
     ],
     dependencies: [
         .package(url: "https://github.com/groue/GRDB.swift", from: "7.12.0"),
@@ -23,8 +24,11 @@ let package = Package(
             dependencies: ["FridayDomain", "FridayInfrastructure", .product(name: "SwiftTerm", package: "SwiftTerm")],
             resources: [.copy("Resources/Fonts")]
         ),
+        .target(name: "FridayCLI", dependencies: ["FridayDomain", "FridayInfrastructure"]),
+        .executableTarget(name: "friday-cli", dependencies: ["FridayCLI", "FridayInfrastructure"]),
         .testTarget(name: "FridayDomainTests", dependencies: ["FridayDomain"]),
         .testTarget(name: "FridayInfrastructureTests", dependencies: ["FridayInfrastructure"]),
         .testTarget(name: "FridayFeaturesTests", dependencies: ["FridayFeatures"]),
+        .testTarget(name: "FridayCLITests", dependencies: ["FridayCLI", "FridayInfrastructure", "friday-cli"]),
     ]
 )

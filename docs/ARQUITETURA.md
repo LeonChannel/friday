@@ -74,6 +74,9 @@ flowchart LR
 - Toda mudança de schema é migração nova no `DatabaseMigrator`, com nome versionado (`v2-agent-events`). Migração publicada nunca é editada.
 - Escrita em lote dentro de uma transação. Leitura pesada fora da main thread.
 - Teste usa `DatabaseQueue()` em memória, nunca o arquivo real.
+- O banco é aberto com `DatabasePool` (WAL) e espera de até 5 s por trava, para o app e a CLI `friday` usarem o mesmo arquivo ao mesmo tempo.
+- **Assunto**: uma linha por assunto em `subject`, com as partes (perguntas, evidências, alternativas, decisões, frentes) num JSON e a vez (`turn`, `turnReason`) e `updatedAt` em colunas, para consultar sem abrir o JSON. As partes nunca são consultadas uma a uma, então tabela própria só custaria join; se isso mudar, é migração nova.
+- **Escrita de outro processo**: o GRDB não avisa o app quando a CLI grava. A CLI dispara a notificação Darwin `com.leonchannel.friday.subjects-changed` (`SubjectChangeSignal`) depois de cada escrita e o repositório relê ao recebê-la.
 
 ## Processos e agentes
 

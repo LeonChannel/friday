@@ -23,7 +23,14 @@ public struct AppDatabase: Sendable {
         let dir = try FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
             .appendingPathComponent("Friday", isDirectory: true)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        return try AppDatabase(DatabasePool(path: dir.appendingPathComponent("friday.sqlite").path))
+        return try open(path: dir.appendingPathComponent("friday.sqlite").path)
+    }
+
+    /// Abre (e migra) o banco no caminho dado; app e CLI podem abrir o mesmo arquivo ao mesmo tempo (WAL, espera de até 5 s por trava).
+    public static func open(path: String) throws -> AppDatabase {
+        var configuration = Configuration()
+        configuration.busyMode = .timeout(5)
+        return try AppDatabase(DatabasePool(path: path, configuration: configuration))
     }
 
     private static var migrator: DatabaseMigrator {
@@ -53,6 +60,20 @@ public struct AppDatabase: Sendable {
                 t.column("rawJSON", .text).notNull()
             }
             try db.create(index: "agentEvent_session", on: "agentEvent", columns: ["sessionID", "id"])
+        }
+        migrator.registerMigration("v4-subjects") { db in
+            try db.create(table: "subject") { t in
+                t.autoIncrementedPrimaryKey("id")
+                t.column("title", .text).notNull()
+                t.column("projectID", .integer).references("project", onDelete: .setNull)
+                t.column("createdAt", .datetime).notNull()
+                t.column("updatedAt", .datetime).notNull()
+                t.column("intent", .text).notNull()
+                t.column("partsJSON", .text).notNull()
+                t.column("turn", .text).notNull()
+                t.column("turnReason", .text).notNull()
+            }
+            try db.create(index: "subject_turn", on: "subject", columns: ["turn", "updatedAt"])
         }
         return migrator
     }
