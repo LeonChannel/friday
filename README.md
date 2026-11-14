@@ -11,13 +11,14 @@ Workspace visual de desenvolvimento para macOS, onde o desenvolvedor e o agente 
 ## Rodar
 
 ```sh
+(cd Packages/FridayKit && swift test)
 xcodegen generate
 xcodebuild -project Friday.xcodeproj -scheme Friday -destination 'platform=macOS' \
-  -derivedDataPath build -skipPackagePluginValidation test
+  -derivedDataPath build -skipPackagePluginValidation build
 open build/Build/Products/Debug/Friday.app
 ```
 
-O `.xcodeproj` é gerado a partir do `project.yml` e não vai para o git. Abrindo no Xcode pela primeira vez, ele pede para confiar no plugin de build do SwiftTerm.
+O `.xcodeproj` é gerado a partir do `project.yml` e não vai para o git. O código fica no pacote local `Packages/FridayKit`.
 
 ## Licença
 

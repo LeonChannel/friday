@@ -14,20 +14,18 @@ settings:
     ENABLE_HARDENED_RUNTIME: NO
     SWIFT_STRICT_CONCURRENCY: complete
 packages:
-  GRDB:
-    url: https://github.com/groue/GRDB.swift
-    from: 7.12.0
-  SwiftTerm:
-    url: https://github.com/migueldeicaza/SwiftTerm
-    from: 1.99.3
+  FridayKit:
+    path: Packages/FridayKit
 targets:
   Friday:
     type: application
     platform: macOS
     sources: [Friday]
     dependencies:
-      - package: GRDB
-      - package: SwiftTerm
+      - package: FridayKit
+        product: FridayFeatures
+      - package: FridayKit
+        product: FridayInfrastructure
     info:
       path: Friday/App/Info.plist
       properties:
@@ -38,23 +36,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.leonchannel.friday
         GENERATE_INFOPLIST_FILE: NO
-  FridayTests:
-    type: bundle.unit-test
-    platform: macOS
-    sources: [FridayTests]
-    dependencies:
-      - target: Friday
-    settings:
-      base:
-        GENERATE_INFOPLIST_FILE: YES
-        PRODUCT_BUNDLE_IDENTIFIER: com.leonchannel.friday.tests
-        BUNDLE_LOADER: "$(TEST_HOST)"
-        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Friday.app/Contents/MacOS/Friday"
 schemes:
   Friday:
     build:
       targets:
         Friday: all
-        FridayTests: [test]
-    test:
-      targets: [FridayTests]

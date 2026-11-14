@@ -1,16 +1,17 @@
 import AppKit
+import FridayDomain
 import SwiftUI
 
 struct ProjectsSidebar: View {
-    @Environment(ProjectStore.self) private var projects
+    @Environment(ProjectsModel.self) private var model
     @Binding var selection: Project.ID?
     @State private var errorMessage: String?
 
     var body: some View {
         List(selection: $selection) {
             Section("Projetos") {
-                ForEach(projects.all) { project in
-                    Label(project.name, systemImage: project.isGitRepository ? "arrow.triangle.branch" : "folder")
+                ForEach(model.projects) { project in
+                    Label(project.name, systemImage: project.kind.symbolName)
                         .tag(project.id)
                         .contextMenu {
                             Button("Remover da lista", role: .destructive) { remove(project) }
@@ -18,14 +19,15 @@ struct ProjectsSidebar: View {
                 }
             }
         }
+        .listStyle(.sidebar)
         .navigationSplitViewColumnWidth(min: 200, ideal: 240)
         .toolbar {
             ToolbarItem {
                 Button("Adicionar projeto", systemImage: "plus", action: pickFolder)
             }
         }
-        .alert("Não deu para adicionar", isPresented: .constant(errorMessage != nil)) {
-            Button("OK") { errorMessage = nil }
+        .alert("Não deu para continuar", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
+            Button("OK", role: .cancel) {}
         } message: {
             Text(errorMessage ?? "")
         }
@@ -39,7 +41,7 @@ struct ProjectsSidebar: View {
         panel.prompt = "Adicionar"
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do {
-            selection = try projects.add(path: url.path).id
+            selection = try model.add(path: url.path).id
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -48,9 +50,25 @@ struct ProjectsSidebar: View {
     private func remove(_ project: Project) {
         do {
             if selection == project.id { selection = nil }
-            try projects.remove(project.id)
+            try model.remove(project)
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+}
+
+extension ProjectKind {
+    var symbolName: String {
+        switch self {
+        case .git: "arrow.triangle.branch"
+        case .folder: "folder"
+        }
+    }
+
+    var label: String {
+        switch self {
+        case .git: "Repositório git"
+        case .folder: "Pasta"
         }
     }
 }

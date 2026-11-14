@@ -15,13 +15,16 @@ Mudou uma decisão de qualquer uma dessas áreas? O guia muda no mesmo PR.
 ## Projeto
 
 - O `Friday.xcodeproj` é gerado: edite `project.yml` e rode `xcodegen generate`. Nunca edite o `.xcodeproj` à mão.
-- Dependências por Swift Package Manager, declaradas no `project.yml`.
+- Dependências externas no `Package.swift` do `FridayKit`; o `project.yml` só aponta para o pacote local.
 
 ## Verificar
 
 ```sh
-xcodegen generate && xcodebuild -project Friday.xcodeproj -scheme Friday -destination 'platform=macOS' -derivedDataPath build -skipPackagePluginValidation test
+(cd Packages/FridayKit && swift test)
+xcodegen generate && xcodebuild -project Friday.xcodeproj -scheme Friday -destination 'platform=macOS' -derivedDataPath build -skipPackagePluginValidation build
 ```
+
+O código e os testes moram no pacote `Packages/FridayKit` (Domain, Infrastructure, Features). O target do app só compõe as dependências.
 
 Para ver o app rodando, abra com `open -g` (sem trazer a janela para frente). Nunca roube o foco do usuário.
 
