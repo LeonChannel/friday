@@ -127,7 +127,8 @@ Todo fato mostra de onde veio. O grau é desenhado por **forma**, não por cor, 
 - Atalho de teclado aparece junto do controle, em mono e `textoSecundario` (`⌘↵`, `⌃\``, `J/K`).
 - Menus, menus de contexto, folhas, alertas, seletor de arquivo e Ajustes continuam sendo os do sistema, com o vidro e a aparência que o macOS der. A identidade própria vale para a área de trabalho, não para esses elementos.
 - Ícones: SF Symbols, com moderação. Vez e grau são desenhados (ponto, quadrado, `</>`), não ícones. Título e botão não ganham ícone decorativo.
-- A marca é a palavra `friday` em Geist Mono seguida de um bloco limão parado, no formato de um cursor. O cursor nunca pisca.
+- A marca é o logo de dois traços (`FridayMark`): a haste do f, escrita por você (`voce`), e a barra que a atravessa, escrita pelo Claude (`claude`). Ao lado, a palavra `friday` em Geist semibold. A geometria mora só em `FridayMarkShapes.swift`; o ícone do app sai dela por `scripts/icone.swift`.
+- **Abertura**: o logo se escreve na ordem da vez (primeiro o seu traço, depois o do Claude), o nome aparece e a tela some, em cerca de 1,3 s. Clique ou tecla pulam; com "Reduzir movimento" vira só aparecer e sumir. É a única animação de marca do app: ela não se repete nem vira indicador de carregamento.
 
 ## Movimento
 

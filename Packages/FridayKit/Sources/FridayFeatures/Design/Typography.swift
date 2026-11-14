@@ -7,14 +7,16 @@ import SwiftUI
 /// Um papel por linha da tabela de tipografia do guia visual.
 public enum Typography: CaseIterable, Sendable {
     case tituloTela, tituloAssunto, corpo, secundario, rotuloSecao, metadado, numeroDestaque
-    /// Palavra `friday` da marca; fora da tabela do guia porque a marca tem tamanho próprio.
+    /// Palavra `friday` ao lado do logo na lateral.
     case marca
+    /// Palavra `friday` grande, na abertura do app.
+    case marcaAbertura
 
     var postScriptName: String {
         switch self {
-        case .tituloTela, .tituloAssunto: FridayFonts.Name.semibold
+        case .tituloTela, .tituloAssunto, .marca, .marcaAbertura: FridayFonts.Name.semibold
         case .corpo, .secundario: FridayFonts.Name.regular
-        case .rotuloSecao, .numeroDestaque, .marca: FridayFonts.Name.monoSemibold
+        case .rotuloSecao, .numeroDestaque: FridayFonts.Name.monoSemibold
         case .metadado: FridayFonts.Name.monoRegular
         }
     }
@@ -29,14 +31,15 @@ public enum Typography: CaseIterable, Sendable {
         case .rotuloSecao: 10.5
         case .metadado: 11
         case .numeroDestaque: 30
-        case .marca: 15
+        case .marca: 17
+        case .marcaAbertura: 44
         }
     }
 
     /// Estilo do sistema que escala o papel quando o usuário muda o tamanho do texto.
     public var relativeStyle: Font.TextStyle {
         switch self {
-        case .tituloTela: .largeTitle
+        case .tituloTela, .marcaAbertura: .largeTitle
         case .tituloAssunto, .numeroDestaque: .title
         case .corpo: .body
         case .marca: .headline
@@ -50,13 +53,14 @@ public enum Typography: CaseIterable, Sendable {
         switch self {
         case .tituloTela: -0.02
         case .numeroDestaque: -0.03
+        case .marca, .marcaAbertura: -0.035
         case .rotuloSecao: 0.08
         default: 0
         }
     }
 
     public var isUppercase: Bool { self == .rotuloSecao }
-    public var isMono: Bool { self == .rotuloSecao || self == .metadado || self == .numeroDestaque || self == .marca }
+    public var isMono: Bool { self == .rotuloSecao || self == .metadado || self == .numeroDestaque }
 
     /// Fonte SwiftUI do papel. Sem a Geist registrada, o SwiftUI usa a fonte do sistema.
     public var font: Font {

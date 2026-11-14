@@ -1,33 +1,28 @@
-// Resumo: A marca do Friday: a palavra "friday" em Geist Mono seguida de um bloco limão parado, no formato de um cursor.
-// Tags: visual, interface
+// Resumo: Marca do Friday: o logo dos dois traços ao lado da palavra friday em Geist.
+// Tags: visual
 
 import SwiftUI
 
-/// Marca do app. O cursor nunca pisca.
+/// Marca completa (logo e nome) para o topo da lateral.
 public struct FridayWordmark: View {
     public init() {}
 
     public var body: some View {
-        HStack(alignment: .lastTextBaseline, spacing: Spacing.xs) {
+        HStack(spacing: Spacing.sm) {
+            FridayMark(size: 22)
             Text("friday")
                 .typography(.marca)
                 .foregroundStyle(Theme.texto)
-            Rectangle()
-                .fill(Theme.voce)
-                .frame(width: 8, height: 15)
-                .alignmentGuide(.lastTextBaseline) { $0[.bottom] }
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Friday")
     }
 }
 
-#Preview("Marca") {
-    FridayWordmark().padding(Spacing.xxl).background(Theme.superficie)
-        .preferredColorScheme(.dark)
+#Preview("Marca, escuro") {
+    FridayWordmark().padding(Spacing.lg).background(Theme.superficie).preferredColorScheme(.dark)
 }
 
 #Preview("Marca, claro") {
-    FridayWordmark().padding(Spacing.xxl).background(Theme.superficie)
-        .preferredColorScheme(.light)
+    FridayWordmark().padding(Spacing.lg).background(Theme.superficie).preferredColorScheme(.light)
 }

@@ -10,6 +10,7 @@ public struct RootView: View {
     @Environment(SubjectsModel.self) private var subjects
     @Environment(WorkspaceModel.self) private var workspace
     @State private var selection: Destination?
+    @State private var showsSplash = true
     @AppStorage("destination") private var storedDestination = Destination.desk.storageKey
 
     public init() {}
@@ -21,6 +22,11 @@ public struct RootView: View {
             detail
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Theme.fundo)
+        }
+        .overlay {
+            if showsSplash {
+                LaunchSplash { showsSplash = false }
+            }
         }
         .task { await projects.observe() }
         .task { await subjects.observe() }
