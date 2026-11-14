@@ -1,6 +1,10 @@
+// Resumo: Olha uma pasta no disco e diz se ela existe e se é repositório git (inclusive worktree).
+// Tags: pastas, git
+
 import FridayDomain
 import Foundation
 
+/// Consulta o disco local para saber se uma pasta existe e se é git.
 public struct LocalFolderInspector: FolderInspecting {
     public init() {}
 
@@ -9,7 +13,7 @@ public struct LocalFolderInspector: FolderInspecting {
         guard FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory), isDirectory.boolValue else {
             return nil
         }
-        // `.git` is a directory in a normal clone and a file in a worktree.
+        // `.git` é pasta num clone comum e arquivo numa worktree.
         let gitPath = (path as NSString).appendingPathComponent(".git")
         return FileManager.default.fileExists(atPath: gitPath) ? .git : .folder
     }

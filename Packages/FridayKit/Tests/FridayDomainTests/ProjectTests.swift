@@ -1,3 +1,6 @@
+// Resumo: Prova as regras de caminho e nome de projeto.
+// Tags: projetos, testes
+
 import FridayDomain
 import Testing
 

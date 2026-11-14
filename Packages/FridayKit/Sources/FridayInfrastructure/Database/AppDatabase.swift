@@ -1,6 +1,10 @@
+// Resumo: Banco SQLite do Friday: onde o arquivo fica no disco e as migrações que montam as tabelas.
+// Tags: persistencia
+
 import Foundation
 import GRDB
 
+/// O banco SQLite do Friday, já com todas as migrações aplicadas.
 public struct AppDatabase: Sendable {
     let writer: any DatabaseWriter
 
@@ -9,6 +13,7 @@ public struct AppDatabase: Sendable {
         try Self.migrator.migrate(writer)
     }
 
+    /// Banco descartável em memória, para testes e prévias.
     public static func inMemory() throws -> AppDatabase {
         try AppDatabase(DatabaseQueue())
     }

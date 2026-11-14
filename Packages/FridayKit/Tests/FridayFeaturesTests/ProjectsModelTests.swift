@@ -1,3 +1,6 @@
+// Resumo: Prova o cadastro de projetos na tela: normaliza caminho, recusa inválido e duplicado, espelha o banco.
+// Tags: projetos, interface, testes
+
 import FridayDomain
 import FridayFeatures
 import Foundation
@@ -42,7 +45,7 @@ struct ProjectsModelTests {
         ProjectsModel(repository: repository, inspector: FixedFolderInspector(kinds: kinds), now: { Date(timeIntervalSince1970: 0) })
     }
 
-    /// Polls a main-actor condition with a deadline instead of sleeping a fixed time.
+    /// Espera uma condição com prazo, em vez de dormir um tempo fixo.
     private func waitUntil(timeout: Duration = .seconds(2), _ condition: () -> Bool) async throws {
         let deadline = ContinuousClock.now + timeout
         while !condition() {
@@ -61,7 +64,7 @@ private struct FixedFolderInspector: FolderInspecting {
 }
 
 private final class InMemoryProjectRepository: ProjectRepository, @unchecked Sendable {
-    // SAFETY: every access goes through `lock`.
+    // SAFETY: todo acesso passa pelo `lock`.
     private let lock = NSLock()
     private var projects: [Project] = []
     private var nextId: Int64 = 1

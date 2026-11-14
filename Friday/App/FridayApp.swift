@@ -1,3 +1,6 @@
+// Resumo: Ponto de entrada do app: abre o banco local e monta as dependências reais de cada funcionalidade.
+// Tags: composicao
+
 import FridayFeatures
 import FridayInfrastructure
 import SwiftUI

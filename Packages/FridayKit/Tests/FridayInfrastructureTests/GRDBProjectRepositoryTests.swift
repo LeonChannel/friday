@@ -1,3 +1,6 @@
+// Resumo: Prova que o banco guarda, apaga e avisa mudanças de projetos na ordem certa.
+// Tags: projetos, persistencia, testes
+
 import FridayDomain
 import FridayInfrastructure
 import Foundation

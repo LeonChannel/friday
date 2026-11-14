@@ -1,3 +1,6 @@
+// Resumo: Prova a detecção de pasta comum, clone git, worktree, caminho inexistente e arquivo.
+// Tags: pastas, git, testes
+
 import FridayDomain
 import FridayInfrastructure
 import Foundation

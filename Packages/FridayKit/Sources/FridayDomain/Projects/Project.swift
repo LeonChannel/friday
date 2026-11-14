@@ -1,10 +1,15 @@
+// Resumo: O que é um projeto no Friday (pasta ou repositório git) e as regras de caminho e nome que valem em todo lugar.
+// Tags: projetos
+
 import Foundation
 
+/// Tipo de projeto: repositório git ou pasta comum.
 public enum ProjectKind: String, Codable, Sendable {
     case git
     case folder
 }
 
+/// Uma pasta que o Friday acompanha, com nome, caminho e tipo.
 public struct Project: Identifiable, Hashable, Sendable {
     public var id: Int64?
     public var name: String
@@ -20,11 +25,12 @@ public struct Project: Identifiable, Hashable, Sendable {
         self.addedAt = addedAt
     }
 
-    /// Normalizes a path the same way everywhere, so duplicates are caught regardless of trailing slashes or `..`.
+    /// Normaliza o caminho do mesmo jeito em todo lugar, para pegar duplicata com barra final ou `..`.
     public static func normalizedPath(_ rawPath: String) -> String {
         URL(fileURLWithPath: rawPath).standardizedFileURL.path
     }
 
+    /// Nome inicial do projeto: o nome da última pasta do caminho.
     public static func defaultName(forPath path: String) -> String {
         (path as NSString).lastPathComponent
     }

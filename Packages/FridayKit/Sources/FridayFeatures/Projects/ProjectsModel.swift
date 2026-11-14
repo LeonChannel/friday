@@ -1,7 +1,11 @@
+// Resumo: Estado da lista de projetos na tela: adiciona com validação, remove e acompanha o banco ao vivo.
+// Tags: projetos, interface
+
 import FridayDomain
 import Foundation
 import Observation
 
+/// Estado da lista de projetos que a interface mostra e altera.
 @MainActor
 @Observable
 public final class ProjectsModel {
@@ -18,7 +22,7 @@ public final class ProjectsModel {
         self.now = now
     }
 
-    /// Mirrors the repository until the calling task is cancelled (use it from `.task`).
+    /// Espelha o banco até a tarefa que chamou ser cancelada (use dentro de `.task`).
     public func observe() async {
         do {
             for try await projects in repository.observeAll() {
@@ -30,6 +34,7 @@ public final class ProjectsModel {
         }
     }
 
+    /// Cadastra a pasta: normaliza o caminho, confere se existe e se já não está na lista.
     @discardableResult
     public func add(path rawPath: String) throws -> Project {
         let path = Project.normalizedPath(rawPath)
@@ -38,6 +43,7 @@ public final class ProjectsModel {
         return try repository.insert(Project(name: Project.defaultName(forPath: path), path: path, kind: kind, addedAt: now()))
     }
 
+    /// Tira o projeto da lista. A pasta no disco não é tocada.
     public func remove(_ project: Project) throws {
         guard let id = project.id else { return }
         try repository.delete(id: id)

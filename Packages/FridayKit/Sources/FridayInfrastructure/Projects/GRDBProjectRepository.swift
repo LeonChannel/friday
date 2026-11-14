@@ -1,7 +1,11 @@
+// Resumo: Guarda os projetos no banco e avisa a tela a cada mudança, sem ela precisar recarregar.
+// Tags: projetos, persistencia
+
 import FridayDomain
 import Foundation
 import GRDB
 
+/// Projetos guardados no SQLite, com aviso ao vivo de cada mudança.
 public struct GRDBProjectRepository: ProjectRepository {
     private let database: AppDatabase
 
@@ -46,7 +50,7 @@ public struct GRDBProjectRepository: ProjectRepository {
     }
 }
 
-/// Keeps GRDB out of the Domain type.
+/// Formato da linha no banco; existe para o tipo do Domain não depender do GRDB.
 private struct ProjectRecord: Codable, FetchableRecord, MutablePersistableRecord {
     static let databaseTableName = "project"
 

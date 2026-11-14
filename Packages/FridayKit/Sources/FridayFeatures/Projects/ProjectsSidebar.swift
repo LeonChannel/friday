@@ -1,3 +1,6 @@
+// Resumo: Barra lateral com os projetos: escolher pasta para adicionar, remover pelo menu de contexto e mostrar erros.
+// Tags: projetos, interface
+
 import AppKit
 import FridayDomain
 import SwiftUI

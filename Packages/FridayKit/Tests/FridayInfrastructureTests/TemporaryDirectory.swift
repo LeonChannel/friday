@@ -1,6 +1,9 @@
+// Resumo: Pasta temporária descartável para os testes não tocarem nos arquivos reais do usuário.
+// Tags: testes
+
 import Foundation
 
-/// A unique directory under the system temp folder, removed by `remove()`.
+/// Pasta única dentro da pasta temporária do sistema, apagada por `remove()`.
 struct TemporaryDirectory {
     let url: URL
 

@@ -1,6 +1,10 @@
+// Resumo: Janela principal: barra lateral de projetos e o detalhe do projeto escolhido, com prévias de exemplo.
+// Tags: interface
+
 import FridayDomain
 import SwiftUI
 
+/// Janela principal do Friday.
 public struct RootView: View {
     @Environment(ProjectsModel.self) private var projects
     @State private var selection: Project.ID?
@@ -47,7 +51,7 @@ import FridayInfrastructure
 
 @MainActor
 private func previewModel(_ projects: [Project]) -> ProjectsModel {
-    // SAFETY: preview-only; an in-memory database cannot fail to open.
+    // SAFETY: só prévia; banco em memória não falha ao abrir.
     let repository = GRDBProjectRepository(database: try! AppDatabase.inMemory())
     for project in projects { _ = try? repository.insert(project) }
     return ProjectsModel(repository: repository, inspector: LocalFolderInspector())
