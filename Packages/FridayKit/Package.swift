@@ -10,6 +10,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/groue/GRDB.swift", from: "7.12.0"),
+        .package(url: "https://github.com/migueldeicaza/SwiftTerm", from: "1.99.3"),
     ],
     targets: [
         .target(name: "FridayDomain"),
@@ -17,7 +18,10 @@ let package = Package(
             name: "FridayInfrastructure",
             dependencies: ["FridayDomain", .product(name: "GRDB", package: "GRDB.swift")]
         ),
-        .target(name: "FridayFeatures", dependencies: ["FridayDomain", "FridayInfrastructure"]),
+        .target(
+            name: "FridayFeatures",
+            dependencies: ["FridayDomain", "FridayInfrastructure", .product(name: "SwiftTerm", package: "SwiftTerm")]
+        ),
         .testTarget(name: "FridayDomainTests", dependencies: ["FridayDomain"]),
         .testTarget(name: "FridayInfrastructureTests", dependencies: ["FridayInfrastructure"]),
         .testTarget(name: "FridayFeaturesTests", dependencies: ["FridayFeatures"]),

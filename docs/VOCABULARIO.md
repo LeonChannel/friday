@@ -23,3 +23,7 @@ O índice `docs/MAPA.md` é gerado a partir desses cabeçalhos com `swift script
 | `interface` | telas, componentes visuais e estado de tela |
 | `composicao` | montagem das dependências reais do app (composition root) |
 | `testes` | apoio a testes e os próprios testes |
+| `agentes` | sessões de agentes de IA (Claude Code, Codex): tipos, identificação e como são abertos |
+| `terminal` | terminal embutido, processos e PTY |
+| `sensor` | recebimento dos eventos dos agentes (hooks), socket local e gravação desses eventos |
+| `linha-do-tempo` | projeções dos eventos em linha do tempo, status e esteira |
