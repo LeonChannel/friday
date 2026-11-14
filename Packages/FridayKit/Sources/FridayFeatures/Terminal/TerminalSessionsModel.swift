@@ -1,0 +1,82 @@
+// Resumo: Sessões de terminal abertas num projeto: abrir shell, Claude ou Codex, fechar, escolher a ativa e registrar o fim do processo.
+// Tags: terminal, agentes, interface
+
+import FridayDomain
+import Foundation
+import Observation
+
+/// Situação do processo de uma sessão.
+public enum TerminalSessionState: Equatable, Sendable {
+    case running
+    /// `code` é nil quando o processo morreu por sinal.
+    case exited(code: Int32?)
+}
+
+/// Uma aba de terminal: o programa, o título e a receita usada para iniciá-lo.
+public struct TerminalSession: Identifiable, Equatable, Sendable {
+    public let id: AgentSessionID
+    public let agent: AgentKind
+    public let title: String
+    public let plan: LaunchPlan
+    public var state: TerminalSessionState
+}
+
+/// Estado das sessões de terminal de um projeto. Quem mostra a sessão avisa o fim do processo por `markExited`.
+@MainActor
+@Observable
+public final class TerminalSessionsModel {
+    public private(set) var sessions: [TerminalSession] = []
+    public var selection: AgentSessionID?
+    /// Mensagem em português da última sessão que não abriu.
+    public private(set) var openError: String?
+
+    public let project: Project
+    private let planner: any LaunchPlanning
+    private let makeSessionID: @Sendable () -> AgentSessionID
+
+    public init(project: Project, planner: any LaunchPlanning, makeSessionID: @escaping @Sendable () -> AgentSessionID = { AgentSessionID() }) {
+        self.project = project
+        self.planner = planner
+        self.makeSessionID = makeSessionID
+    }
+
+    /// Abre uma sessão nova do programa, na pasta do projeto, e a deixa selecionada.
+    @discardableResult
+    public func open(agent: AgentKind) -> TerminalSession? {
+        let id = makeSessionID()
+        do {
+            let plan = try planner.plan(agent: agent, project: project, session: id)
+            let session = TerminalSession(id: id, agent: agent, title: title(for: agent), plan: plan, state: .running)
+            sessions.append(session)
+            selection = id
+            openError = nil
+            return session
+        } catch {
+            openError = "Não foi possível abrir \(agent.displayName): \(error.localizedDescription)"
+            return nil
+        }
+    }
+
+    /// Remove a sessão da lista; a view que a mostra encerra o processo ao sair da tela.
+    public func close(id: AgentSessionID) {
+        guard let index = sessions.firstIndex(where: { $0.id == id }) else { return }
+        sessions.remove(at: index)
+        if selection == id {
+            selection = sessions.isEmpty ? nil : sessions[min(index, sessions.count - 1)].id
+        }
+    }
+
+    /// Registra que o processo da sessão terminou. A aba continua até o usuário fechar.
+    public func markExited(id: AgentSessionID, code: Int32?) {
+        guard let index = sessions.firstIndex(where: { $0.id == id }) else { return }
+        sessions[index].state = .exited(code: code)
+    }
+
+    /// Some com o aviso de erro depois que o usuário o viu.
+    public func dismissOpenError() { openError = nil }
+
+    private func title(for agent: AgentKind) -> String {
+        let sameKind = sessions.filter { $0.agent == agent }.count
+        return sameKind == 0 ? agent.displayName : "\(agent.displayName) \(sameKind + 1)"
+    }
+}
