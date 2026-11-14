@@ -7,7 +7,6 @@ import FridayInfrastructure
 import OSLog
 import SwiftUI
 
-@main
 struct FridayApp: App {
     @State private var projects: ProjectsModel
     @State private var workspace: WorkspaceModel
@@ -29,6 +28,7 @@ struct FridayApp: App {
         do {
             let locations = try SensorLocations.live()
             hooks = CompositeLaunchCustomizer([
+                FridayToolsCustomizer.bundled(),
                 ClaudeSessionHooks(locations: locations),
                 // Codex só com a preferência ligada; lida a cada sessão nova.
                 CodexSessionHooks(locations: locations, isEnabled: AppSettings.codexTimelineReader()),

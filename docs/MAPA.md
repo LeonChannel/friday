@@ -6,6 +6,7 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 
 | Arquivo | Camada | Resumo |
 |---|---|---|
+| [`FridayToolsCustomizer+Bundle.swift`](../Friday/App/FridayToolsCustomizer+Bundle.swift) | App | Acha dentro do pacote do app a pasta do comando `friday` e o plugin do Claude com a skill do assunto. |
 | [`AgentKind.swift`](../Packages/FridayKit/Sources/FridayDomain/Agents/AgentKind.swift) | Domain | Quais programas o Friday sabe abrir num terminal: shell comum, Claude Code e Codex. |
 | [`AgentSessionID.swift`](../Packages/FridayKit/Sources/FridayDomain/Agents/AgentSessionID.swift) | Domain | Identificador único de uma sessão de agente aberta pelo Friday, que liga terminal, hooks e eventos. |
 | [`LaunchPlan.swift`](../Packages/FridayKit/Sources/FridayDomain/Agents/LaunchPlan.swift) | Domain | Receita para abrir um programa no terminal (executável, argumentos, ambiente e pasta) e quem monta essa receita. |
@@ -18,11 +19,13 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 | [`HookScript.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Sensor/HookScript.swift) | Infrastructure | Script de shell que o agente chama a cada hook: repassa o JSON ao socket do Friday e nunca atrasa nem derruba o agente. |
 | [`CompositeLaunchCustomizer.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Terminal/CompositeLaunchCustomizer.swift) | Infrastructure | Junta vários customizadores de lançamento (Claude, Codex...) num só: argumentos somados e ambiente mesclado. |
 | [`DefaultLaunchPlanner.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Terminal/DefaultLaunchPlanner.swift) | Infrastructure | Monta a receita de cada sessão (shell, Claude, Codex) passando pelo shell de login do usuário para achar os executáveis. |
+| [`FridayToolsCustomizer.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Terminal/FridayToolsCustomizer.swift) | Infrastructure | Põe as ferramentas do Friday ao alcance de cada sessão: o comando `friday` no PATH e, para o Claude, o plugin com a skill do assunto. |
 | [`CodexAndSubagentDecodingTests.swift`](../Packages/FridayKit/Tests/FridayDomainTests/CodexAndSubagentDecodingTests.swift) | Teste | Prova que o decoder entende os payloads reais do Codex e identifica subagentes do Claude pelo tipo e pela descrição. |
 | [`TerminalSessionsModelTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/TerminalSessionsModelTests.swift) | Teste | Prova o estado das sessões de terminal: abrir, numerar títulos, selecionar, fechar e registrar o fim do processo. |
 | [`ClaudeSessionHooksTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/ClaudeSessionHooksTests.swift) | Teste | Testa que o plano do Claude ganha --settings e as variáveis do Friday, e que o settings gerado cobre os hooks sem tocar na config global. |
 | [`CodexSessionHooksTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/CodexSessionHooksTests.swift) | Teste | Prova que o Codex só ganha hooks do Friday com a preferência ligada, e que os argumentos chegam intactos ao shell. |
 | [`DefaultLaunchPlannerTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/DefaultLaunchPlannerTests.swift) | Teste | Prova a receita de cada agente: executável, argumentos, ambiente limpo e pasta do projeto. |
+| [`FridayToolsCustomizerTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/FridayToolsCustomizerTests.swift) | Teste | Prova que toda sessão recebe o friday no PATH e que só o Claude recebe o plugin, passando por um shell real. |
 | [`LaunchCustomizationTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/LaunchCustomizationTests.swift) | Teste | Prova que os acréscimos por sessão chegam ao agente intactos, mesmo com espaço e aspas no caminho. |
 
 ## assuntos
@@ -30,6 +33,7 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 | Arquivo | Camada | Resumo |
 |---|---|---|
 | [`CommandLineArguments.swift`](../Packages/FridayKit/Sources/FridayCLI/CommandLineArguments.swift) | ? | Separa os argumentos da CLI em posicionais, opções com valor (repetíveis) e chaves sem valor, recusando opção desconhecida. |
+| [`FridayCommand.swift`](../Packages/FridayKit/Sources/FridayCLI/FridayCommand.swift) | ? | Ponto de entrada do comando `friday`, usado pelo executável próprio e pelo app quando chamado em modo de linha de comando. |
 | [`SubjectCommandRunner.swift`](../Packages/FridayKit/Sources/FridayCLI/SubjectCommandRunner.swift) | ? | Executa os comandos `friday` (assunto, evidência, pergunta, decisão, frente, alternativa) contra o banco e devolve texto curto e estável. |
 | [`SubjectMarkdown.swift`](../Packages/FridayKit/Sources/FridayCLI/SubjectMarkdown.swift) | ? | Escreve o assunto em markdown compacto, para o Claude carregar barato o estado dele. |
 | [`Subject.swift`](../Packages/FridayKit/Sources/FridayDomain/Subjects/Subject.swift) | Domain | O assunto: título, intenção e as partes que o dev e o Claude desenvolvem juntos, com validação de teto em cada escrita. |
@@ -43,7 +47,8 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 | [`TurnHolder+Style.swift`](../Packages/FridayKit/Sources/FridayFeatures/Subjects/TurnHolder+Style.swift) | Features | Liga a vez calculada do assunto ao estilo visual da vez (limão você, coral Claude, vazado parado). |
 | [`GRDBSubjectRepository.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Subjects/GRDBSubjectRepository.swift) | Infrastructure | Guarda os assuntos no banco (partes em JSON, vez e atualização em colunas) e avisa a tela de mudanças, mesmo as feitas pela CLI. |
 | [`SubjectChangeSignal.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Subjects/SubjectChangeSignal.swift) | Infrastructure | Aviso entre processos de que um assunto mudou no banco, para o app aberto atualizar quando a CLI escreve. |
-| [`main.swift`](../Packages/FridayKit/Sources/friday-cli/main.swift) | ? | Ponto de entrada do comando `friday`: abre o banco (o do app, ou o de FRIDAY_DB), roda o comando e avisa o app se algo foi gravado. |
+| [`FridayToolsCustomizer.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Terminal/FridayToolsCustomizer.swift) | Infrastructure | Põe as ferramentas do Friday ao alcance de cada sessão: o comando `friday` no PATH e, para o Claude, o plugin com a skill do assunto. |
+| [`main.swift`](../Packages/FridayKit/Sources/friday-cli/main.swift) | ? | Executável `friday` do pacote; só repassa os argumentos para o FridayCommand. |
 | [`FridayBinaryTests.swift`](../Packages/FridayKit/Tests/FridayCLITests/FridayBinaryTests.swift) | Teste | Roda o binário `friday` de verdade contra um banco temporário, com o app "aberto" no mesmo arquivo, e prova que a escrita chega nele. |
 | [`SubjectCommandRunnerTests.swift`](../Packages/FridayKit/Tests/FridayCLITests/SubjectCommandRunnerTests.swift) | Teste | Prova os comandos da CLI de assunto em processo contra banco em memória: saída, recusa de texto grande e erros de uso. |
 | [`SubjectLimitsTests.swift`](../Packages/FridayKit/Tests/FridayDomainTests/SubjectLimitsTests.swift) | Teste | Prova que cada texto do assunto é recusado acima do teto, com o tamanho na mensagem, e que o limite exato passa. |
@@ -56,6 +61,8 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 | Arquivo | Camada | Resumo |
 |---|---|---|
 | [`FridayApp.swift`](../Friday/App/FridayApp.swift) | App | Ponto de entrada do app: abre o banco, liga o sensor de hooks e monta as dependências reais de cada funcionalidade. |
+| [`FridayToolsCustomizer+Bundle.swift`](../Friday/App/FridayToolsCustomizer+Bundle.swift) | App | Acha dentro do pacote do app a pasta do comando `friday` e o plugin do Claude com a skill do assunto. |
+| [`main.swift`](../Friday/App/main.swift) | App | Início do processo: o mesmo executável serve de app e, com --friday-cli, de comando `friday` para os agentes. |
 
 ## configuracoes
 
@@ -165,6 +172,7 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 
 | Arquivo | Camada | Resumo |
 |---|---|---|
+| [`FridayCommand.swift`](../Packages/FridayKit/Sources/FridayCLI/FridayCommand.swift) | ? | Ponto de entrada do comando `friday`, usado pelo executável próprio e pelo app quando chamado em modo de linha de comando. |
 | [`SubjectCommandRunner.swift`](../Packages/FridayKit/Sources/FridayCLI/SubjectCommandRunner.swift) | ? | Executa os comandos `friday` (assunto, evidência, pergunta, decisão, frente, alternativa) contra o banco e devolve texto curto e estável. |
 | [`ProjectRepository.swift`](../Packages/FridayKit/Sources/FridayDomain/Projects/ProjectRepository.swift) | Domain | Contratos que a lista de projetos usa: onde os projetos são guardados e como saber se uma pasta é repositório git. |
 | [`AgentEventRepository.swift`](../Packages/FridayKit/Sources/FridayDomain/Sensor/AgentEventRepository.swift) | Domain | Contrato de onde os eventos dos agentes ficam guardados e como a tela os acompanha ao vivo. |
@@ -175,7 +183,6 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 | [`SensorService.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Sensor/SensorService.swift) | Infrastructure | Liga o sensor: abre o socket dos hooks, decodifica cada mensagem recebida e grava o evento no banco. |
 | [`GRDBSubjectRepository.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Subjects/GRDBSubjectRepository.swift) | Infrastructure | Guarda os assuntos no banco (partes em JSON, vez e atualização em colunas) e avisa a tela de mudanças, mesmo as feitas pela CLI. |
 | [`SubjectChangeSignal.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Subjects/SubjectChangeSignal.swift) | Infrastructure | Aviso entre processos de que um assunto mudou no banco, para o app aberto atualizar quando a CLI escreve. |
-| [`main.swift`](../Packages/FridayKit/Sources/friday-cli/main.swift) | ? | Ponto de entrada do comando `friday`: abre o banco (o do app, ou o de FRIDAY_DB), roda o comando e avisa o app se algo foi gravado. |
 | [`FridayBinaryTests.swift`](../Packages/FridayKit/Tests/FridayCLITests/FridayBinaryTests.swift) | Teste | Roda o binário `friday` de verdade contra um banco temporário, com o app "aberto" no mesmo arquivo, e prova que a escrita chega nele. |
 | [`GRDBAgentEventRepositoryTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/GRDBAgentEventRepositoryTests.swift) | Teste | Testa a gravação e a observação dos eventos dos agentes no banco em memória. |
 | [`GRDBProjectRepositoryTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/GRDBProjectRepositoryTests.swift) | Teste | Prova que o banco guarda, apaga e avisa mudanças de projetos na ordem certa. |
@@ -237,10 +244,12 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 | [`CommandRunner.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Processes/CommandRunner.swift) | Infrastructure | Único ponto que lança um programa de linha de comando, espera terminar e devolve código de saída, saída e erro. |
 | [`CompositeLaunchCustomizer.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Terminal/CompositeLaunchCustomizer.swift) | Infrastructure | Junta vários customizadores de lançamento (Claude, Codex...) num só: argumentos somados e ambiente mesclado. |
 | [`DefaultLaunchPlanner.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Terminal/DefaultLaunchPlanner.swift) | Infrastructure | Monta a receita de cada sessão (shell, Claude, Codex) passando pelo shell de login do usuário para achar os executáveis. |
+| [`FridayToolsCustomizer.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Terminal/FridayToolsCustomizer.swift) | Infrastructure | Põe as ferramentas do Friday ao alcance de cada sessão: o comando `friday` no PATH e, para o Claude, o plugin com a skill do assunto. |
 | [`LocalProcessIntegrationTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/LocalProcessIntegrationTests.swift) | Teste | Integração com processo real curto no LocalProcess do SwiftTerm, sem view: a saída chega, a pasta é a certa e o término é detectado. |
 | [`TerminalSessionsModelTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/TerminalSessionsModelTests.swift) | Teste | Prova o estado das sessões de terminal: abrir, numerar títulos, selecionar, fechar e registrar o fim do processo. |
 | [`WorkspaceModelTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/WorkspaceModelTests.swift) | Teste | Prova que cada projeto mantém as mesmas sessões de terminal ao ir e voltar. |
 | [`DefaultLaunchPlannerTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/DefaultLaunchPlannerTests.swift) | Teste | Prova a receita de cada agente: executável, argumentos, ambiente limpo e pasta do projeto. |
+| [`FridayToolsCustomizerTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/FridayToolsCustomizerTests.swift) | Teste | Prova que toda sessão recebe o friday no PATH e que só o Claude recebe o plugin, passando por um shell real. |
 | [`LaunchCustomizationTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/LaunchCustomizationTests.swift) | Teste | Prova que os acréscimos por sessão chegam ao agente intactos, mesmo com espaço e aspas no caminho. |
 
 ## testes
@@ -276,6 +285,7 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 | [`DefaultLaunchPlannerTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/DefaultLaunchPlannerTests.swift) | Teste | Prova a receita de cada agente: executável, argumentos, ambiente limpo e pasta do projeto. |
 | [`FixtureLoader.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/FixtureLoader.swift) | Teste | Lê os payloads de hook gravados em Tests/Fixtures para os testes de domínio. |
 | [`FolderChangeWatcherTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/FolderChangeWatcherTests.swift) | Teste | Prova o vigia de pasta com FSEvents real: evento ao escrever, filtro de .git, fim do fluxo ao parar. |
+| [`FridayToolsCustomizerTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/FridayToolsCustomizerTests.swift) | Teste | Prova que toda sessão recebe o friday no PATH e que só o Claude recebe o plugin, passando por um shell real. |
 | [`GRDBAgentEventRepositoryTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/GRDBAgentEventRepositoryTests.swift) | Teste | Testa a gravação e a observação dos eventos dos agentes no banco em memória. |
 | [`GRDBProjectRepositoryTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/GRDBProjectRepositoryTests.swift) | Teste | Prova que o banco guarda, apaga e avisa mudanças de projetos na ordem certa. |
 | [`GRDBSubjectRepositoryTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/GRDBSubjectRepositoryTests.swift) | Teste | Prova que o banco guarda os assuntos com todas as partes, altera em transação, consulta a vez e enxerga escrita de outro processo. |

@@ -1,0 +1,4 @@
+#!/bin/sh
+# Resumo: comando `friday` embutido no app; chama o próprio executável do Friday em modo de linha de comando.
+here=$(cd "$(dirname "$0")/../.." && pwd)
+exec "$here/MacOS/Friday" --friday-cli "$@"

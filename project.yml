@@ -20,12 +20,22 @@ targets:
   Friday:
     type: application
     platform: macOS
-    sources: [Friday]
+    sources:
+      - path: Friday
+        excludes: [Resources/**]
+      - path: Friday/Resources/bin
+        type: folder
+        buildPhase: resources
+      - path: Friday/Resources/claude-plugin
+        type: folder
+        buildPhase: resources
     dependencies:
       - package: FridayKit
         product: FridayFeatures
       - package: FridayKit
         product: FridayInfrastructure
+      - package: FridayKit
+        product: FridayCLI
     info:
       path: Friday/App/Info.plist
       properties:

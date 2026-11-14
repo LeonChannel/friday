@@ -1,0 +1,8 @@
+{
+  "name": "friday",
+  "description": "Ferramentas do Friday para sessões abertas dentro do app: registrar o estado de um assunto pela CLI friday.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Leonardo Porte"
+  }
+}

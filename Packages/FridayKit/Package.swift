@@ -7,6 +7,7 @@ let package = Package(
     products: [
         .library(name: "FridayFeatures", targets: ["FridayFeatures"]),
         .library(name: "FridayInfrastructure", targets: ["FridayInfrastructure"]),
+        .library(name: "FridayCLI", targets: ["FridayCLI"]),
         .executable(name: "friday", targets: ["friday-cli"]),
     ],
     dependencies: [
