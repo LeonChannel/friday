@@ -9,6 +9,10 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 | [`AgentKind.swift`](../Packages/FridayKit/Sources/FridayDomain/Agents/AgentKind.swift) | Domain | Quais programas o Friday sabe abrir num terminal: shell comum, Claude Code e Codex. |
 | [`AgentSessionID.swift`](../Packages/FridayKit/Sources/FridayDomain/Agents/AgentSessionID.swift) | Domain | Identificador único de uma sessão de agente aberta pelo Friday, que liga terminal, hooks e eventos. |
 | [`LaunchPlan.swift`](../Packages/FridayKit/Sources/FridayDomain/Agents/LaunchPlan.swift) | Domain | Receita para abrir um programa no terminal (executável, argumentos, ambiente e pasta) e quem monta essa receita. |
+| [`TerminalSessionsModel.swift`](../Packages/FridayKit/Sources/FridayFeatures/Terminal/TerminalSessionsModel.swift) | Features | Sessões de terminal abertas num projeto: abrir shell, Claude ou Codex, fechar, escolher a ativa e registrar o fim do processo. |
+| [`DefaultLaunchPlanner.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Terminal/DefaultLaunchPlanner.swift) | Infrastructure | Monta a receita de cada sessão (shell, Claude, Codex) passando pelo shell de login do usuário para achar os executáveis. |
+| [`TerminalSessionsModelTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/TerminalSessionsModelTests.swift) | Teste | Prova o estado das sessões de terminal: abrir, numerar títulos, selecionar, fechar e registrar o fim do processo. |
+| [`DefaultLaunchPlannerTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/DefaultLaunchPlannerTests.swift) | Teste | Prova a receita de cada agente: executável, argumentos, ambiente limpo e pasta do projeto. |
 
 ## composicao
 
@@ -30,6 +34,9 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 | [`ProjectsModel.swift`](../Packages/FridayKit/Sources/FridayFeatures/Projects/ProjectsModel.swift) | Features | Estado da lista de projetos na tela: adiciona com validação, remove e acompanha o banco ao vivo. |
 | [`ProjectsSidebar.swift`](../Packages/FridayKit/Sources/FridayFeatures/Projects/ProjectsSidebar.swift) | Features | Barra lateral com os projetos: escolher pasta para adicionar, remover pelo menu de contexto e mostrar erros. |
 | [`RootView.swift`](../Packages/FridayKit/Sources/FridayFeatures/Shell/RootView.swift) | Features | Janela principal: barra lateral de projetos e o detalhe do projeto escolhido, com prévias de exemplo. |
+| [`TerminalArea.swift`](../Packages/FridayKit/Sources/FridayFeatures/Terminal/TerminalArea.swift) | Features | Área de terminais de um projeto: abas das sessões, botões para abrir shell, Claude Code e Codex, e prévias. |
+| [`TerminalSessionView.swift`](../Packages/FridayKit/Sources/FridayFeatures/Terminal/TerminalSessionView.swift) | Features | Mostra um terminal de verdade (SwiftTerm) rodando a receita de uma sessão e avisa quando o processo termina. |
+| [`TerminalSessionsModel.swift`](../Packages/FridayKit/Sources/FridayFeatures/Terminal/TerminalSessionsModel.swift) | Features | Sessões de terminal abertas num projeto: abrir shell, Claude ou Codex, fechar, escolher a ativa e registrar o fim do processo. |
 | [`ProjectsModelTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/ProjectsModelTests.swift) | Teste | Prova o cadastro de projetos na tela: normaliza caminho, recusa inválido e duplicado, espelha o banco. |
 
 ## pastas
@@ -76,13 +83,23 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 |---|---|---|
 | [`AgentKind.swift`](../Packages/FridayKit/Sources/FridayDomain/Agents/AgentKind.swift) | Domain | Quais programas o Friday sabe abrir num terminal: shell comum, Claude Code e Codex. |
 | [`LaunchPlan.swift`](../Packages/FridayKit/Sources/FridayDomain/Agents/LaunchPlan.swift) | Domain | Receita para abrir um programa no terminal (executável, argumentos, ambiente e pasta) e quem monta essa receita. |
+| [`TerminalArea.swift`](../Packages/FridayKit/Sources/FridayFeatures/Terminal/TerminalArea.swift) | Features | Área de terminais de um projeto: abas das sessões, botões para abrir shell, Claude Code e Codex, e prévias. |
+| [`TerminalSessionView.swift`](../Packages/FridayKit/Sources/FridayFeatures/Terminal/TerminalSessionView.swift) | Features | Mostra um terminal de verdade (SwiftTerm) rodando a receita de uma sessão e avisa quando o processo termina. |
+| [`TerminalSessionsModel.swift`](../Packages/FridayKit/Sources/FridayFeatures/Terminal/TerminalSessionsModel.swift) | Features | Sessões de terminal abertas num projeto: abrir shell, Claude ou Codex, fechar, escolher a ativa e registrar o fim do processo. |
+| [`DefaultLaunchPlanner.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Terminal/DefaultLaunchPlanner.swift) | Infrastructure | Monta a receita de cada sessão (shell, Claude, Codex) passando pelo shell de login do usuário para achar os executáveis. |
+| [`LocalProcessIntegrationTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/LocalProcessIntegrationTests.swift) | Teste | Integração com processo real curto no LocalProcess do SwiftTerm, sem view: a saída chega, a pasta é a certa e o término é detectado. |
+| [`TerminalSessionsModelTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/TerminalSessionsModelTests.swift) | Teste | Prova o estado das sessões de terminal: abrir, numerar títulos, selecionar, fechar e registrar o fim do processo. |
+| [`DefaultLaunchPlannerTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/DefaultLaunchPlannerTests.swift) | Teste | Prova a receita de cada agente: executável, argumentos, ambiente limpo e pasta do projeto. |
 
 ## testes
 
 | Arquivo | Camada | Resumo |
 |---|---|---|
 | [`ProjectTests.swift`](../Packages/FridayKit/Tests/FridayDomainTests/ProjectTests.swift) | Teste | Prova as regras de caminho e nome de projeto. |
+| [`LocalProcessIntegrationTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/LocalProcessIntegrationTests.swift) | Teste | Integração com processo real curto no LocalProcess do SwiftTerm, sem view: a saída chega, a pasta é a certa e o término é detectado. |
 | [`ProjectsModelTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/ProjectsModelTests.swift) | Teste | Prova o cadastro de projetos na tela: normaliza caminho, recusa inválido e duplicado, espelha o banco. |
+| [`TerminalSessionsModelTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/TerminalSessionsModelTests.swift) | Teste | Prova o estado das sessões de terminal: abrir, numerar títulos, selecionar, fechar e registrar o fim do processo. |
+| [`DefaultLaunchPlannerTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/DefaultLaunchPlannerTests.swift) | Teste | Prova a receita de cada agente: executável, argumentos, ambiente limpo e pasta do projeto. |
 | [`GRDBProjectRepositoryTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/GRDBProjectRepositoryTests.swift) | Teste | Prova que o banco guarda, apaga e avisa mudanças de projetos na ordem certa. |
 | [`LocalFolderInspectorTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/LocalFolderInspectorTests.swift) | Teste | Prova a detecção de pasta comum, clone git, worktree, caminho inexistente e arquivo. |
 | [`TemporaryDirectory.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/TemporaryDirectory.swift) | Teste | Pasta temporária descartável para os testes não tocarem nos arquivos reais do usuário. |
