@@ -22,3 +22,12 @@ public struct LaunchPlan: Equatable, Sendable {
 public protocol LaunchPlanning: Sendable {
     func plan(agent: AgentKind, project: Project, session: AgentSessionID) throws -> LaunchPlan
 }
+
+/// Acréscimos ao comando de um agente, por sessão (ex.: `--settings` com os hooks do Friday).
+/// O planner aplica com o escape de shell correto; quem implementa não monta linha de comando.
+public protocol AgentLaunchCustomizing: Sendable {
+    /// Argumentos extras do agente, já separados (sem escape).
+    func extraArguments(agent: AgentKind, session: AgentSessionID) throws -> [String]
+    /// Variáveis de ambiente extras da sessão.
+    func extraEnvironment(agent: AgentKind, session: AgentSessionID) throws -> [String: String]
+}
