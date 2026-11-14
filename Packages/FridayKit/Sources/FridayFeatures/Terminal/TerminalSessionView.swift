@@ -10,12 +10,14 @@ import SwiftUI
 struct TerminalSessionView: NSViewRepresentable {
     let session: TerminalSession
     let onExit: @MainActor (Int32?) -> Void
+    @Environment(\.colorScheme) private var colorScheme
 
     func makeCoordinator() -> Coordinator { Coordinator(onExit: onExit) }
 
     func makeNSView(context: Context) -> LocalProcessTerminalView {
         let view = LocalProcessTerminalView(frame: .zero)
-        view.font = .monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
+        view.font = Typography.terminalFont()
+        applyTheme(to: view)
         view.processDelegate = context.coordinator
         let plan = session.plan
         view.startProcess(
@@ -29,6 +31,16 @@ struct TerminalSessionView: NSViewRepresentable {
 
     func updateNSView(_ view: LocalProcessTerminalView, context: Context) {
         context.coordinator.onExit = onExit
+        applyTheme(to: view)
+    }
+
+    /// O SwiftTerm guarda cor fixa, então a troca de aparência é reaplicada a cada atualização.
+    private func applyTheme(to view: LocalProcessTerminalView) {
+        let appearance: ThemeAppearance = colorScheme == .dark ? .dark : .light
+        view.nativeBackgroundColor = NSColor(hex: ThemeToken.fundo.hex(appearance))
+        view.nativeForegroundColor = NSColor(hex: ThemeToken.texto.hex(appearance))
+        view.caretColor = NSColor(hex: ThemeToken.voce.hex(appearance))
+        view.caretTextColor = NSColor(hex: ThemeToken.textoSobreVoce.hex(appearance))
     }
 
     static func dismantleNSView(_ view: LocalProcessTerminalView, coordinator: Coordinator) {

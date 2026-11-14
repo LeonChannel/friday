@@ -15,11 +15,18 @@ public struct ProjectFilesView: View {
     public var body: some View {
         Group {
             if let message = model.errorMessage, model.rootNodes.isEmpty {
-                ContentUnavailableView("Pasta indisponível", systemImage: "folder.badge.questionmark", description: Text(message))
+                VStack(spacing: Spacing.sm) {
+                    Text("Pasta indisponível").typography(.corpo).foregroundStyle(Theme.texto)
+                    Text(message).typography(.secundario).foregroundStyle(Theme.textoSecundario).multilineTextAlignment(.center)
+                }
+                .padding(Spacing.xxl)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 List { FileTreeRows(nodes: model.rootNodes, model: model) }
+                    .scrollContentBackground(.hidden)
             }
         }
+        .background(Theme.superficie)
         .task(id: model.rootPath) { await model.start() }
     }
 }
@@ -58,18 +65,22 @@ private struct FileRow: View {
 
     var body: some View {
         HStack {
-            Label(node.name, systemImage: node.isDirectory ? "folder" : "doc")
-                .lineLimit(1)
+            Label {
+                Text(node.name).typography(.corpo).foregroundStyle(Theme.texto)
+            } icon: {
+                Image(systemName: node.isDirectory ? "folder" : "doc").foregroundStyle(Theme.textoSecundario)
+            }
+            .lineLimit(1)
             Spacer()
             if let kind {
                 Text(kind.badge)
-                    .font(.caption.monospaced())
+                    .typography(.metadado)
                     .foregroundStyle(kind.tint)
                     .accessibilityHidden(true)
             } else if containsChanges {
-                Image(systemName: "circle.fill")
-                    .imageScale(.small)
-                    .foregroundStyle(.secondary)
+                Circle()
+                    .fill(Theme.textoSecundario)
+                    .frame(width: 4, height: 4)
                     .accessibilityHidden(true)
             }
         }
@@ -127,6 +138,7 @@ private func sampleModel() -> ProjectFilesModel {
 #Preview("Árvore de arquivos") {
     ProjectFilesView(model: sampleModel())
         .frame(width: 320, height: 360)
+        .preferredColorScheme(.light)
 }
 
 #Preview("Árvore de arquivos, escuro") {

@@ -13,29 +13,33 @@ public struct GitSummaryView: View {
     }
 
     public var body: some View {
-        if let status {
-            HStack(spacing: 12) {
-                Label(status.branch ?? "HEAD solto", systemImage: "arrow.triangle.branch")
-                    .font(.headline)
-                    .accessibilityLabel("Branch \(status.branch ?? "HEAD solto")")
-                if let ahead = status.ahead, let behind = status.behind, ahead > 0 || behind > 0 {
-                    HStack(spacing: 8) {
-                        if ahead > 0 { Label("\(ahead)", systemImage: "arrow.up").accessibilityLabel("\(ahead) à frente do remoto") }
-                        if behind > 0 { Label("\(behind)", systemImage: "arrow.down").accessibilityLabel("\(behind) atrás do remoto") }
+        Group {
+            if let status {
+                HStack(spacing: Spacing.md) {
+                    Text(status.branch ?? "HEAD solto")
+                        .typography(.metadado)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(Theme.texto)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .textSelection(.enabled)
+                        .accessibilityLabel("Branch \(status.branch ?? "HEAD solto")")
+                    if let ahead = status.ahead, let behind = status.behind, ahead > 0 || behind > 0 {
+                        HStack(spacing: Spacing.sm) {
+                            if ahead > 0 { MonoLabel("↑\(ahead)").accessibilityLabel("\(ahead) à frente do remoto") }
+                            if behind > 0 { MonoLabel("↓\(behind)").accessibilityLabel("\(behind) atrás do remoto") }
+                        }
                     }
-                    .font(.subheadline.monospacedDigit())
-                    .foregroundStyle(.secondary)
+                    Spacer()
+                    MonoLabel(changesText(status.changes.count))
                 }
-                Spacer()
-                Text(changesText(status.changes.count))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+            } else {
+                MonoLabel("Sem git nesta pasta")
             }
-        } else {
-            Label("Sem git nesta pasta", systemImage: "arrow.triangle.branch")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
         }
+        .padding(.horizontal, Spacing.lg)
+        .padding(.vertical, Spacing.md)
+        .background(Theme.superficie)
     }
 
     private func changesText(_ count: Int) -> String {
@@ -47,22 +51,20 @@ public struct GitSummaryView: View {
     }
 }
 
-#Preview("Resumo do git") {
-    VStack(alignment: .leading, spacing: 16) {
-        GitSummaryView(status: GitStatus(branch: "fase/pastas", upstream: "origin/main", ahead: 2, behind: 1, changes: [
-            GitFileChange(path: "a.swift", kind: .modified), GitFileChange(path: "b.swift", kind: .untracked),
-        ]))
-        GitSummaryView(status: GitStatus(branch: "main"))
-        GitSummaryView(status: GitStatus(branch: nil, changes: [GitFileChange(path: "a", kind: .added)]))
-        GitSummaryView(status: nil)
+private struct GitSummaryPreview: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            GitSummaryView(status: GitStatus(branch: "fase/visual", upstream: "origin/main", ahead: 2, behind: 1, changes: [
+                GitFileChange(path: "a.swift", kind: .modified), GitFileChange(path: "b.swift", kind: .untracked),
+            ]))
+            GitSummaryView(status: GitStatus(branch: "main"))
+            GitSummaryView(status: GitStatus(branch: nil, changes: [GitFileChange(path: "a", kind: .added)]))
+            GitSummaryView(status: nil)
+        }
+        .frame(width: 360)
+        .background(Theme.superficie)
     }
-    .padding()
-    .frame(width: 420)
 }
 
-#Preview("Resumo do git, escuro") {
-    GitSummaryView(status: GitStatus(branch: "main", upstream: "origin/main", ahead: 1, behind: 0, changes: []))
-        .padding()
-        .frame(width: 420)
-        .preferredColorScheme(.dark)
-}
+#Preview("Resumo do git, escuro") { GitSummaryPreview().preferredColorScheme(.dark) }
+#Preview("Resumo do git, claro") { GitSummaryPreview().preferredColorScheme(.light) }
