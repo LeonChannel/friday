@@ -17,9 +17,11 @@ public struct TerminalArea: View {
             Divider()
             ZStack {
                 ForEach(model.sessions) { session in
-                    TerminalSessionView(session: session) { code in
+                    TerminalSessionView(session: session, onTitle: { title in
+                        model.setProgramTitle(id: session.id, title: title)
+                    }, onExit: { code in
                         model.markExited(id: session.id, code: code)
-                    }
+                    })
                     .opacity(model.selection == session.id ? 1 : 0)
                     .allowsHitTesting(model.selection == session.id)
                 }
@@ -46,7 +48,7 @@ public struct TerminalArea: View {
         HStack {
             Picker("Sessão", selection: $model.selection) {
                 ForEach(model.sessions) { session in
-                    Label(session.title, systemImage: symbol(for: session)).tag(Optional(session.id))
+                    Label(session.displayTitle, systemImage: symbol(for: session)).tag(Optional(session.id))
                 }
             }
             .pickerStyle(.segmented)

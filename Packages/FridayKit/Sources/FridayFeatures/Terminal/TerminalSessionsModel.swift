@@ -16,9 +16,18 @@ public enum TerminalSessionState: Equatable, Sendable {
 public struct TerminalSession: Identifiable, Equatable, Sendable {
     public let id: AgentSessionID
     public let agent: AgentKind
+    /// Nome de fallback (agente, com número quando há repetidos).
     public let title: String
+    /// Título que o programa definiu no terminal, quando definiu.
+    public var programTitle: String?
     public let plan: LaunchPlan
     public var state: TerminalSessionState
+
+    /// O que a aba mostra: o título do programa ou, sem ele, o nome numerado do agente.
+    public var displayTitle: String {
+        let trimmed = programTitle?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmed.isEmpty ? title : trimmed
+    }
 }
 
 /// Estado das sessões de terminal de um projeto. Quem mostra a sessão avisa o fim do processo por `markExited`.
@@ -70,6 +79,12 @@ public final class TerminalSessionsModel {
     public func markExited(id: AgentSessionID, code: Int32?) {
         guard let index = sessions.firstIndex(where: { $0.id == id }) else { return }
         sessions[index].state = .exited(code: code)
+    }
+
+    /// Guarda o título que o programa definiu; vazio volta ao nome do agente.
+    public func setProgramTitle(id: AgentSessionID, title: String) {
+        guard let index = sessions.firstIndex(where: { $0.id == id }) else { return }
+        sessions[index].programTitle = title
     }
 
     /// Some com o aviso de erro depois que o usuário o viu.
