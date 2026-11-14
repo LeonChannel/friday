@@ -1,0 +1,17 @@
+{
+  "session_id": "11111111-2222-4333-8444-555555555555",
+  "transcript_path": "/Users/exemplo/.claude/projects/-Users-exemplo-projeto/11111111-2222-4333-8444-555555555555.jsonl",
+  "cwd": "/Users/exemplo/projeto",
+  "prompt_id": "22222222-3333-4444-8555-666666666666",
+  "permission_mode": "bypassPermissions",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "echo oi",
+    "description": "Run echo oi"
+  },
+  "tool_use_id": "toolu_EXEMPLO0000000000000000"
+}
