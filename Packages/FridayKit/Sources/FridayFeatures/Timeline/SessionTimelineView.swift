@@ -35,8 +35,8 @@ public struct SessionTimelineView: View {
                     Text("Nenhum evento ainda. Eventos chegam quando o Claude Code roda nesta sessão.")
                         .foregroundStyle(.secondary)
                 }
-                ForEach(model.events.reversed()) { event in
-                    EventRow(event: event)
+                ForEach(model.entries.reversed()) { entry in
+                    EventRow(entry: entry)
                 }
             }
         }
@@ -58,21 +58,31 @@ struct PhaseLabel: View {
 }
 
 struct EventRow: View {
-    let event: AgentEvent
+    let entry: TimelineEntry
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack {
                 Text(title).font(.callout)
                 Spacer()
-                Text(event.occurredAt, format: .dateTime.hour().minute().second())
+                Text(entry.last.occurredAt, format: .dateTime.hour().minute().second())
                     .font(.caption).monospaced().foregroundStyle(.secondary)
             }
-            if let target = event.target {
-                Text(target).font(.caption).monospaced().foregroundStyle(.secondary).lineLimit(2).truncationMode(.middle)
+            if let detail {
+                Text(detail).font(.caption).monospaced().foregroundStyle(.secondary).lineLimit(2).truncationMode(.middle)
             }
         }
         .accessibilityElement(children: .combine)
+    }
+
+    private var event: AgentEvent { entry.first }
+
+    private var detail: String? {
+        guard entry.isSubagentGroup else { return event.target }
+        if entry.count == 1 {
+            return [event.toolName, event.target].compactMap(\.self).joined(separator: ": ").nilIfEmpty
+        }
+        return entry.subagentTypes.joined(separator: ", ").nilIfEmpty
     }
 
     private var title: String {
@@ -82,11 +92,16 @@ struct EventRow: View {
         case .preToolUse: "Vai usar \(event.toolName ?? "ferramenta")"
         case .postToolUse: "Usou \(event.toolName ?? "ferramenta")"
         case .notification: "Aviso do agente"
+        case .permissionRequest: "Pediu permissão"
         case .stop: "Terminou o turno"
-        case .subagentStop: "Subagente terminou"
+        case .subagentStop: entry.count == 1 ? "Subagente terminou" : "\(entry.count) subagentes terminaram"
         case .sessionEnd: "Sessão encerrada"
         case .preCompact: "Compactando contexto"
         case .unknown(let name): name
         }
     }
+}
+
+private extension String {
+    var nilIfEmpty: String? { isEmpty ? nil : self }
 }

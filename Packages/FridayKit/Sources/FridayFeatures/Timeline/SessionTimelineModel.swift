@@ -9,6 +9,8 @@ import Observation
 @Observable
 public final class SessionTimelineModel {
     public private(set) var events: [AgentEvent] = []
+    /// Linhas da linha do tempo, da mais antiga à mais nova, com subagentes seguidos já agrupados.
+    public private(set) var entries: [TimelineEntry] = []
     public private(set) var activity = SessionActivity(events: [])
     public private(set) var loadError: String?
 
@@ -25,6 +27,7 @@ public final class SessionTimelineModel {
         do {
             for try await events in repository.observe(session: session) {
                 self.events = events
+                entries = TimelineProjection.entries(from: events)
                 activity = SessionActivity(events: events)
             }
         } catch is CancellationError {
