@@ -1,0 +1,8 @@
+Friday.xcodeproj/
+build/
+DerivedData/
+.build/
+*.xcuserstate
+xcuserdata/
+.DS_Store
+.claude/settings.local.json

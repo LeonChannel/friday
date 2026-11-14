@@ -1,0 +1,60 @@
+name: Friday
+options:
+  bundleIdPrefix: com.leonchannel
+  deploymentTarget:
+    macOS: "26.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_IDENTITY: "-"
+    CODE_SIGN_STYLE: Manual
+    ENABLE_HARDENED_RUNTIME: NO
+    SWIFT_STRICT_CONCURRENCY: complete
+packages:
+  GRDB:
+    url: https://github.com/groue/GRDB.swift
+    from: 7.12.0
+  SwiftTerm:
+    url: https://github.com/migueldeicaza/SwiftTerm
+    from: 1.99.3
+targets:
+  Friday:
+    type: application
+    platform: macOS
+    sources: [Friday]
+    dependencies:
+      - package: GRDB
+      - package: SwiftTerm
+    info:
+      path: Friday/App/Info.plist
+      properties:
+        CFBundleDisplayName: Friday
+        LSApplicationCategoryType: public.app-category.developer-tools
+        NSHumanReadableCopyright: "© 2026 Leonardo Porte"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.leonchannel.friday
+        GENERATE_INFOPLIST_FILE: NO
+  FridayTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources: [FridayTests]
+    dependencies:
+      - target: Friday
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.leonchannel.friday.tests
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Friday.app/Contents/MacOS/Friday"
+schemes:
+  Friday:
+    build:
+      targets:
+        Friday: all
+        FridayTests: [test]
+    test:
+      targets: [FridayTests]
