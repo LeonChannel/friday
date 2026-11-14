@@ -92,7 +92,7 @@ flowchart LR
 - Repo público: nenhum segredo, caminho pessoal ou dado de trabalho no código, teste ou fixture.
 - Socket dos hooks com permissão só para o usuário (`0600`), num diretório do próprio Friday.
 - Caminho do socket: `~/Library/Application Support/Friday/run/hooks.sock` quando cabe em 100 bytes (limite do `sun_path` no macOS é 104); com nome de usuário longo, cai em `/tmp/friday-<uid>/hooks.sock`. Nos dois casos o diretório é 0700 do próprio usuário e o servidor recusa diretório de outro dono.
-- O script de hook nunca falha nem demora (sai 0 em ~1 s mesmo com o Friday fechado) e só envia quando `FRIDAY_SESSION_ID` e `FRIDAY_SOCKET` existem, ou seja, só em sessões abertas pelo Friday.
+- O script de hook nunca falha nem demora (sai 0 em ~1 s mesmo com o Friday fechado) e só envia quando `FRIDAY_SESSION_ID` e `FRIDAY_HOOK_SOCKET` existem, ou seja, só em sessões abertas pelo Friday.
 - O app não usa rede a não ser que uma funcionalidade peça, e cada uso de rede é declarado neste guia.
 
 ## Quando mudar este guia

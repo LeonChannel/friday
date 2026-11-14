@@ -7,17 +7,17 @@ import Foundation
 public enum HookScript {
     public static let fileName = "friday-hook.sh"
 
-    /// Texto do script. Argumento 1 = agente (`claude`); usa `FRIDAY_SESSION_ID` e `FRIDAY_SOCKET` do ambiente.
+    /// Texto do script. Argumento 1 = agente (`claude`); usa `FRIDAY_SESSION_ID` e `FRIDAY_HOOK_SOCKET` do ambiente.
     public static let contents = """
     #!/bin/sh
     # Friday: repassa o evento de hook ao app. Nunca falha e nunca bloqueia o agente.
     PATH=/usr/bin:/bin
     agent="${1:-claude}"
-    if [ -z "$FRIDAY_SESSION_ID" ] || [ -z "$FRIDAY_SOCKET" ] || [ ! -S "$FRIDAY_SOCKET" ]; then
+    if [ -z "$FRIDAY_SESSION_ID" ] || [ -z "$FRIDAY_HOOK_SOCKET" ] || [ ! -S "$FRIDAY_HOOK_SOCKET" ]; then
       cat >/dev/null 2>&1
       exit 0
     fi
-    { printf '%s %s\\n' "$agent" "$FRIDAY_SESSION_ID"; cat; } | nc -U -w 1 "$FRIDAY_SOCKET" >/dev/null 2>&1
+    { printf '%s %s\\n' "$agent" "$FRIDAY_SESSION_ID"; cat; } | nc -U -w 1 "$FRIDAY_HOOK_SOCKET" >/dev/null 2>&1
     exit 0
     """ + "\n"
 
