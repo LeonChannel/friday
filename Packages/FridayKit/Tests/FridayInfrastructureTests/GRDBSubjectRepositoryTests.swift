@@ -67,9 +67,19 @@ struct GRDBSubjectRepositoryTests {
         var iterator = repository.observeAll().makeAsyncIterator()
         #expect(try await iterator.next() == [])
         try repository.insert(try Subject(title: "Velho", createdAt: now))
-        #expect(try await iterator.next()?.map(\.title) == ["Velho"])
+        #expect(try await Self.next(&iterator, until: ["Velho"]))
         try repository.insert(try Subject(title: "Novo", createdAt: now.addingTimeInterval(10)))
-        #expect(try await iterator.next()?.map(\.title) == ["Novo", "Velho"])
+        #expect(try await Self.next(&iterator, until: ["Novo", "Velho"]))
+    }
+
+    /// Lê emissões até chegar à lista esperada. Outros testes em paralelo disparam o aviso global entre processos,
+    /// então a observação pode reemitir; o que importa é chegar ao estado certo, na ordem certa.
+    private static func next(_ iterator: inout AsyncThrowingStream<[Subject], any Error>.AsyncIterator, until titles: [String]) async throws -> Bool {
+        for _ in 0..<10 {
+            guard let value = try await iterator.next() else { return false }
+            if value.map(\.title) == titles { return true }
+        }
+        return false
     }
 
     @Test(.tags(.integration)) func observationSeesWriteFromAnotherConnectionAfterSignal() async throws {
