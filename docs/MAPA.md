@@ -20,6 +20,32 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 | [`DefaultLaunchPlannerTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/DefaultLaunchPlannerTests.swift) | Teste | Prova a receita de cada agente: executável, argumentos, ambiente limpo e pasta do projeto. |
 | [`LaunchCustomizationTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/LaunchCustomizationTests.swift) | Teste | Prova que os acréscimos por sessão chegam ao agente intactos, mesmo com espaço e aspas no caminho. |
 
+## assuntos
+
+| Arquivo | Camada | Resumo |
+|---|---|---|
+| [`CommandLineArguments.swift`](../Packages/FridayKit/Sources/FridayCLI/CommandLineArguments.swift) | ? | Separa os argumentos da CLI em posicionais, opções com valor (repetíveis) e chaves sem valor, recusando opção desconhecida. |
+| [`SubjectCommandRunner.swift`](../Packages/FridayKit/Sources/FridayCLI/SubjectCommandRunner.swift) | ? | Executa os comandos `friday` (assunto, evidência, pergunta, decisão, frente, alternativa) contra o banco e devolve texto curto e estável. |
+| [`SubjectMarkdown.swift`](../Packages/FridayKit/Sources/FridayCLI/SubjectMarkdown.swift) | ? | Escreve o assunto em markdown compacto, para o Claude carregar barato o estado dele. |
+| [`Subject.swift`](../Packages/FridayKit/Sources/FridayDomain/Subjects/Subject.swift) | Domain | O assunto: título, intenção e as partes que o dev e o Claude desenvolvem juntos, com validação de teto em cada escrita. |
+| [`SubjectLimits.swift`](../Packages/FridayKit/Sources/FridayDomain/Subjects/SubjectLimits.swift) | Domain | Tetos de caracteres de cada texto do assunto e o erro que recusa texto grande demais, dizendo o tamanho. |
+| [`SubjectParts.swift`](../Packages/FridayKit/Sources/FridayDomain/Subjects/SubjectParts.swift) | Domain | As partes de um assunto (evidência, pergunta, alternativa, decisão e frente) e o grau de cada evidência. |
+| [`SubjectRepository.swift`](../Packages/FridayKit/Sources/FridayDomain/Subjects/SubjectRepository.swift) | Domain | Contrato de onde os assuntos ficam guardados: lista ao vivo, leitura, criação e alteração atômica. |
+| [`SubjectResume.swift`](../Packages/FridayKit/Sources/FridayDomain/Subjects/SubjectResume.swift) | Domain | Monta o "Onde você parou" (objetivo, confirmado, em aberto, sua vez, depois) só do estado gravado, sem inventar linha. |
+| [`SubjectTurn.swift`](../Packages/FridayKit/Sources/FridayDomain/Subjects/SubjectTurn.swift) | Domain | Calcula de quem é a vez no assunto (você, Claude ou parado) e o motivo em texto curto, só do estado gravado. |
+| [`SubjectModel.swift`](../Packages/FridayKit/Sources/FridayFeatures/Subjects/SubjectModel.swift) | Features | Estado de um assunto aberto na tela: as partes, a vez e o "Onde você parou", acompanhando o banco ao vivo. |
+| [`SubjectsModel.swift`](../Packages/FridayKit/Sources/FridayFeatures/Subjects/SubjectsModel.swift) | Features | Lista de assuntos na tela, cada um com a sua vez, acompanhando o banco ao vivo. |
+| [`SubjectsPreviewView.swift`](../Packages/FridayKit/Sources/FridayFeatures/Subjects/SubjectsPreviewView.swift) | Features | Telas mínimas e neutras da lista de assuntos e do "Onde você parou", só para prévia até o tema chegar. |
+| [`GRDBSubjectRepository.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Subjects/GRDBSubjectRepository.swift) | Infrastructure | Guarda os assuntos no banco (partes em JSON, vez e atualização em colunas) e avisa a tela de mudanças, mesmo as feitas pela CLI. |
+| [`SubjectChangeSignal.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Subjects/SubjectChangeSignal.swift) | Infrastructure | Aviso entre processos de que um assunto mudou no banco, para o app aberto atualizar quando a CLI escreve. |
+| [`main.swift`](../Packages/FridayKit/Sources/friday-cli/main.swift) | ? | Ponto de entrada do comando `friday`: abre o banco (o do app, ou o de FRIDAY_DB), roda o comando e avisa o app se algo foi gravado. |
+| [`FridayBinaryTests.swift`](../Packages/FridayKit/Tests/FridayCLITests/FridayBinaryTests.swift) | Teste | Roda o binário `friday` de verdade contra um banco temporário, com o app "aberto" no mesmo arquivo, e prova que a escrita chega nele. |
+| [`SubjectCommandRunnerTests.swift`](../Packages/FridayKit/Tests/FridayCLITests/SubjectCommandRunnerTests.swift) | Teste | Prova os comandos da CLI de assunto em processo contra banco em memória: saída, recusa de texto grande e erros de uso. |
+| [`SubjectLimitsTests.swift`](../Packages/FridayKit/Tests/FridayDomainTests/SubjectLimitsTests.swift) | Teste | Prova que cada texto do assunto é recusado acima do teto, com o tamanho na mensagem, e que o limite exato passa. |
+| [`SubjectProjectionTests.swift`](../Packages/FridayKit/Tests/FridayDomainTests/SubjectProjectionTests.swift) | Teste | Prova a vez (você, Claude, parado) e o "Onde você parou" com assuntos de exemplo fixos, incluindo linhas que ficam vazias. |
+| [`SubjectsModelTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/SubjectsModelTests.swift) | Teste | Prova que a lista de assuntos e o assunto aberto na tela acompanham o banco e calculam vez e "Onde você parou". |
+| [`GRDBSubjectRepositoryTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/GRDBSubjectRepositoryTests.swift) | Teste | Prova que o banco guarda os assuntos com todas as partes, altera em transação, consulta a vez e enxerga escrita de outro processo. |
+
 ## composicao
 
 | Arquivo | Camada | Resumo |
@@ -62,6 +88,9 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 | [`ProjectsSidebar.swift`](../Packages/FridayKit/Sources/FridayFeatures/Projects/ProjectsSidebar.swift) | Features | Barra lateral com os projetos: escolher pasta para adicionar, remover pelo menu de contexto e mostrar erros. |
 | [`RootView.swift`](../Packages/FridayKit/Sources/FridayFeatures/Shell/RootView.swift) | Features | Janela principal: projetos na lateral, terminais do projeto no centro e, no inspetor, a linha do tempo da sessão ou os arquivos e o git. |
 | [`WorkspaceModel.swift`](../Packages/FridayKit/Sources/FridayFeatures/Shell/WorkspaceModel.swift) | Features | Guarda por projeto as sessões de terminal, a linha do tempo de cada sessão e a árvore de arquivos, para trocar de projeto sem perder nada. |
+| [`SubjectModel.swift`](../Packages/FridayKit/Sources/FridayFeatures/Subjects/SubjectModel.swift) | Features | Estado de um assunto aberto na tela: as partes, a vez e o "Onde você parou", acompanhando o banco ao vivo. |
+| [`SubjectsModel.swift`](../Packages/FridayKit/Sources/FridayFeatures/Subjects/SubjectsModel.swift) | Features | Lista de assuntos na tela, cada um com a sua vez, acompanhando o banco ao vivo. |
+| [`SubjectsPreviewView.swift`](../Packages/FridayKit/Sources/FridayFeatures/Subjects/SubjectsPreviewView.swift) | Features | Telas mínimas e neutras da lista de assuntos e do "Onde você parou", só para prévia até o tema chegar. |
 | [`TerminalArea.swift`](../Packages/FridayKit/Sources/FridayFeatures/Terminal/TerminalArea.swift) | Features | Área de terminais de um projeto: abas das sessões, botões para abrir shell, Claude Code e Codex, e prévias. |
 | [`TerminalSessionView.swift`](../Packages/FridayKit/Sources/FridayFeatures/Terminal/TerminalSessionView.swift) | Features | Mostra um terminal de verdade (SwiftTerm) rodando a receita de uma sessão e avisa quando o processo termina. |
 | [`TerminalSessionsModel.swift`](../Packages/FridayKit/Sources/FridayFeatures/Terminal/TerminalSessionsModel.swift) | Features | Sessões de terminal abertas num projeto: abrir shell, Claude ou Codex, fechar, escolher a ativa e registrar o fim do processo. |
@@ -70,6 +99,7 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 | [`ProjectFilesFlowTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/ProjectFilesFlowTests.swift) | Teste | Fluxo ponta a ponta sem tela: repositório git temporário, leitor, git e vigia reais; mexer no disco muda o que o modelo mostra. |
 | [`ProjectFilesModelTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/ProjectFilesModelTests.swift) | Teste | Prova a árvore de arquivos e o git na tela: abre pasta sob demanda, marca status e recarrega só o necessário quando o vigia avisa. |
 | [`ProjectsModelTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/ProjectsModelTests.swift) | Teste | Prova o cadastro de projetos na tela: normaliza caminho, recusa inválido e duplicado, espelha o banco. |
+| [`SubjectsModelTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/SubjectsModelTests.swift) | Teste | Prova que a lista de assuntos e o assunto aberto na tela acompanham o banco e calculam vez e "Onde você parou". |
 | [`WorkspaceModelTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/WorkspaceModelTests.swift) | Teste | Prova que cada projeto mantém as mesmas sessões de terminal ao ir e voltar. |
 
 ## linha-do-tempo
@@ -106,14 +136,21 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 
 | Arquivo | Camada | Resumo |
 |---|---|---|
+| [`SubjectCommandRunner.swift`](../Packages/FridayKit/Sources/FridayCLI/SubjectCommandRunner.swift) | ? | Executa os comandos `friday` (assunto, evidência, pergunta, decisão, frente, alternativa) contra o banco e devolve texto curto e estável. |
 | [`ProjectRepository.swift`](../Packages/FridayKit/Sources/FridayDomain/Projects/ProjectRepository.swift) | Domain | Contratos que a lista de projetos usa: onde os projetos são guardados e como saber se uma pasta é repositório git. |
 | [`AgentEventRepository.swift`](../Packages/FridayKit/Sources/FridayDomain/Sensor/AgentEventRepository.swift) | Domain | Contrato de onde os eventos dos agentes ficam guardados e como a tela os acompanha ao vivo. |
+| [`SubjectRepository.swift`](../Packages/FridayKit/Sources/FridayDomain/Subjects/SubjectRepository.swift) | Domain | Contrato de onde os assuntos ficam guardados: lista ao vivo, leitura, criação e alteração atômica. |
 | [`AppDatabase.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Database/AppDatabase.swift) | Infrastructure | Banco SQLite do Friday: onde o arquivo fica no disco e as migrações que montam as tabelas. |
 | [`GRDBProjectRepository.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Projects/GRDBProjectRepository.swift) | Infrastructure | Guarda os projetos no banco e avisa a tela a cada mudança, sem ela precisar recarregar. |
 | [`GRDBAgentEventRepository.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Sensor/GRDBAgentEventRepository.swift) | Infrastructure | Guarda os eventos dos agentes no banco e avisa a tela a cada novo evento, por sessão ou os mais recentes de todas. |
 | [`SensorService.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Sensor/SensorService.swift) | Infrastructure | Liga o sensor: abre o socket dos hooks, decodifica cada mensagem recebida e grava o evento no banco. |
+| [`GRDBSubjectRepository.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Subjects/GRDBSubjectRepository.swift) | Infrastructure | Guarda os assuntos no banco (partes em JSON, vez e atualização em colunas) e avisa a tela de mudanças, mesmo as feitas pela CLI. |
+| [`SubjectChangeSignal.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Subjects/SubjectChangeSignal.swift) | Infrastructure | Aviso entre processos de que um assunto mudou no banco, para o app aberto atualizar quando a CLI escreve. |
+| [`main.swift`](../Packages/FridayKit/Sources/friday-cli/main.swift) | ? | Ponto de entrada do comando `friday`: abre o banco (o do app, ou o de FRIDAY_DB), roda o comando e avisa o app se algo foi gravado. |
+| [`FridayBinaryTests.swift`](../Packages/FridayKit/Tests/FridayCLITests/FridayBinaryTests.swift) | Teste | Roda o binário `friday` de verdade contra um banco temporário, com o app "aberto" no mesmo arquivo, e prova que a escrita chega nele. |
 | [`GRDBAgentEventRepositoryTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/GRDBAgentEventRepositoryTests.swift) | Teste | Testa a gravação e a observação dos eventos dos agentes no banco em memória. |
 | [`GRDBProjectRepositoryTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/GRDBProjectRepositoryTests.swift) | Teste | Prova que o banco guarda, apaga e avisa mudanças de projetos na ordem certa. |
+| [`GRDBSubjectRepositoryTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/GRDBSubjectRepositoryTests.swift) | Teste | Prova que o banco guarda os assuntos com todas as partes, altera em transação, consulta a vez e enxerga escrita de outro processo. |
 | [`SensorServiceFlowTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/SensorServiceFlowTests.swift) | Teste | Teste de fluxo do sensor: o script de hook envia payloads reais do Claude pelo socket e eles aparecem gravados, sem lixo. |
 
 ## projetos
@@ -177,14 +214,21 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 
 | Arquivo | Camada | Resumo |
 |---|---|---|
+| [`FridayBinaryTests.swift`](../Packages/FridayKit/Tests/FridayCLITests/FridayBinaryTests.swift) | Teste | Roda o binário `friday` de verdade contra um banco temporário, com o app "aberto" no mesmo arquivo, e prova que a escrita chega nele. |
+| [`SubjectCommandRunnerTests.swift`](../Packages/FridayKit/Tests/FridayCLITests/SubjectCommandRunnerTests.swift) | Teste | Prova os comandos da CLI de assunto em processo contra banco em memória: saída, recusa de texto grande e erros de uso. |
+| [`TemporaryDirectory.swift`](../Packages/FridayKit/Tests/FridayCLITests/TemporaryDirectory.swift) | Teste | Pasta temporária descartável para os testes não tocarem nos arquivos reais do usuário. |
+| [`TestTags.swift`](../Packages/FridayKit/Tests/FridayCLITests/TestTags.swift) | Teste | Tags de teste deste módulo, declaradas num lugar só para não colidir. |
 | [`AgentEventDecoderTests.swift`](../Packages/FridayKit/Tests/FridayDomainTests/AgentEventDecoderTests.swift) | Teste | Testa a leitura de payloads reais do Claude Code (e de eventos desconhecidos) e a rejeição de mensagens inválidas. |
 | [`FixtureLoader.swift`](../Packages/FridayKit/Tests/FridayDomainTests/FixtureLoader.swift) | Teste | Lê os payloads de hook gravados em Tests/Fixtures para os testes de domínio. |
 | [`ProjectTests.swift`](../Packages/FridayKit/Tests/FridayDomainTests/ProjectTests.swift) | Teste | Prova as regras de caminho e nome de projeto. |
 | [`SessionActivityTests.swift`](../Packages/FridayKit/Tests/FridayDomainTests/SessionActivityTests.swift) | Teste | Prova que a fase da sessão, os arquivos alterados e as contagens saem certos de uma sequência de eventos. |
+| [`SubjectLimitsTests.swift`](../Packages/FridayKit/Tests/FridayDomainTests/SubjectLimitsTests.swift) | Teste | Prova que cada texto do assunto é recusado acima do teto, com o tamanho na mensagem, e que o limite exato passa. |
+| [`SubjectProjectionTests.swift`](../Packages/FridayKit/Tests/FridayDomainTests/SubjectProjectionTests.swift) | Teste | Prova a vez (você, Claude, parado) e o "Onde você parou" com assuntos de exemplo fixos, incluindo linhas que ficam vazias. |
 | [`LocalProcessIntegrationTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/LocalProcessIntegrationTests.swift) | Teste | Integração com processo real curto no LocalProcess do SwiftTerm, sem view: a saída chega, a pasta é a certa e o término é detectado. |
 | [`ProjectFilesFlowTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/ProjectFilesFlowTests.swift) | Teste | Fluxo ponta a ponta sem tela: repositório git temporário, leitor, git e vigia reais; mexer no disco muda o que o modelo mostra. |
 | [`ProjectFilesModelTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/ProjectFilesModelTests.swift) | Teste | Prova a árvore de arquivos e o git na tela: abre pasta sob demanda, marca status e recarrega só o necessário quando o vigia avisa. |
 | [`ProjectsModelTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/ProjectsModelTests.swift) | Teste | Prova o cadastro de projetos na tela: normaliza caminho, recusa inválido e duplicado, espelha o banco. |
+| [`SubjectsModelTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/SubjectsModelTests.swift) | Teste | Prova que a lista de assuntos e o assunto aberto na tela acompanham o banco e calculam vez e "Onde você parou". |
 | [`TerminalSessionsModelTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/TerminalSessionsModelTests.swift) | Teste | Prova o estado das sessões de terminal: abrir, numerar títulos, selecionar, fechar e registrar o fim do processo. |
 | [`TestTags.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/TestTags.swift) | Teste | Tags de teste compartilhadas deste módulo, declaradas num lugar só para não colidir. |
 | [`WorkspaceModelTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/WorkspaceModelTests.swift) | Teste | Prova que cada projeto mantém as mesmas sessões de terminal ao ir e voltar. |
@@ -194,6 +238,7 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 | [`FolderChangeWatcherTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/FolderChangeWatcherTests.swift) | Teste | Prova o vigia de pasta com FSEvents real: evento ao escrever, filtro de .git, fim do fluxo ao parar. |
 | [`GRDBAgentEventRepositoryTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/GRDBAgentEventRepositoryTests.swift) | Teste | Testa a gravação e a observação dos eventos dos agentes no banco em memória. |
 | [`GRDBProjectRepositoryTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/GRDBProjectRepositoryTests.swift) | Teste | Prova que o banco guarda, apaga e avisa mudanças de projetos na ordem certa. |
+| [`GRDBSubjectRepositoryTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/GRDBSubjectRepositoryTests.swift) | Teste | Prova que o banco guarda os assuntos com todas as partes, altera em transação, consulta a vez e enxerga escrita de outro processo. |
 | [`GitStatusParserTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/GitStatusParserTests.swift) | Teste | Prova que a saída porcelain v2 do git é lida certo: cabeçalho, tipos de mudança, nomes com espaço, renomeação e conflito. |
 | [`GitStatusReaderTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/GitStatusReaderTests.swift) | Teste | Roda o git de verdade num repositório temporário e prova modificado, novo, renomeado, apagado, não rastreado e pasta sem git. |
 | [`HookScriptTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/HookScriptTests.swift) | Teste | Prova o script de hook de verdade: entrega ao servidor, sai 0 rápido com o Friday fechado e não trava com servidor parado. |
