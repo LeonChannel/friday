@@ -16,7 +16,16 @@ public struct SubjectRow: Identifiable, Equatable, Sendable {
 @MainActor
 @Observable
 public final class SubjectsModel {
-    public private(set) var rows: [SubjectRow] = []
+    /// Todos os assuntos do banco; a tela usa `rows`, já filtrado pelo projeto aberto.
+    public private(set) var allRows: [SubjectRow] = []
+    /// Projeto aberto. Assuntos sem projeto aparecem em qualquer um, para nada sumir.
+    public var projectScope: Int64?
+
+    /// Assuntos do projeto aberto.
+    public var rows: [SubjectRow] {
+        guard let projectScope else { return allRows }
+        return allRows.filter { $0.subject.projectID == nil || $0.subject.projectID == projectScope }
+    }
     public private(set) var loadError: String?
 
     private let repository: any SubjectRepository
@@ -34,7 +43,7 @@ public final class SubjectsModel {
     public func observe() async {
         do {
             for try await subjects in repository.observeAll() {
-                rows = subjects.map { SubjectRow(subject: $0, turn: $0.turn) }
+                allRows = subjects.map { SubjectRow(subject: $0, turn: $0.turn) }
             }
         } catch is CancellationError {
         } catch {
@@ -45,6 +54,6 @@ public final class SubjectsModel {
     /// Cria um assunto novo.
     @discardableResult
     public func create(title: String, intent: String = "", projectID: Int64? = nil, now: Date = Date()) throws -> Subject {
-        try repository.insert(Subject(title: title, projectID: projectID, intent: intent, createdAt: now))
+        try repository.insert(Subject(title: title, projectID: projectID ?? projectScope, intent: intent, createdAt: now))
     }
 }

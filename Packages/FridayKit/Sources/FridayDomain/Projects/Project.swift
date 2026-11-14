@@ -16,13 +16,16 @@ public struct Project: Identifiable, Hashable, Sendable {
     public var path: String
     public var kind: ProjectKind
     public var addedAt: Date
+    /// Última vez que o projeto foi aberto no Friday; ordena a seleção de projetos.
+    public var lastOpenedAt: Date?
 
-    public init(id: Int64? = nil, name: String, path: String, kind: ProjectKind, addedAt: Date) {
+    public init(id: Int64? = nil, name: String, path: String, kind: ProjectKind, addedAt: Date, lastOpenedAt: Date? = nil) {
         self.id = id
         self.name = name
         self.path = path
         self.kind = kind
         self.addedAt = addedAt
+        self.lastOpenedAt = lastOpenedAt
     }
 
     /// Normaliza o caminho do mesmo jeito em todo lugar, para pegar duplicata com barra final ou `..`.

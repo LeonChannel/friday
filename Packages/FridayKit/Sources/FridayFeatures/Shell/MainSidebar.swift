@@ -1,18 +1,20 @@
-// Resumo: Lateral da janela: marca, Mesa, Sua vez, os assuntos com a vez de cada um, os projetos e a legenda das três vezes.
+// Resumo: Lateral do projeto aberto: troca de projeto no topo, Mesa, Sua vez, os assuntos do projeto e os repositórios com branch e alterados.
 // Tags: interface, assuntos, projetos
 
-import AppKit
 import FridayDomain
 import SwiftUI
 
-/// Lateral principal do Friday.
+/// Lateral principal, sempre dentro de um projeto.
 struct MainSidebar: View {
+    let project: Project
     @Environment(ProjectsModel.self) private var projects
     @Environment(SubjectsModel.self) private var subjects
+    @Environment(WorkspaceModel.self) private var workspace
     @Binding var selection: Destination?
-    @State private var errorMessage: String?
+    let switchProject: (Project?) -> Void
 
     var body: some View {
+        let repositories = workspace.repositories(for: project)
         List(selection: $selection) {
             Section {
                 row(.desk) { Text("Mesa").typography(.corpo) }
@@ -46,39 +48,59 @@ struct MainSidebar: View {
                 MonoLabel("Assuntos", kind: .secao)
             }
             Section {
-                ForEach(projects.projects) { project in
-                    if let id = project.id {
-                        row(.project(id)) { ProjectRow(project: project) }
-                            .contextMenu {
-                                Button("Remover da lista", role: .destructive) { remove(project) }
-                            }
+                if project.kind == .folder {
+                    row(.folder(project.path)) {
+                        HStack {
+                            Text("Pasta do projeto").typography(.corpo)
+                            Spacer()
+                            MonoLabel("raiz")
+                        }
                     }
                 }
+                ForEach(repositories.summaries) { summary in
+                    row(.folder(summary.repository.path)) { RepositoryRow(summary: summary) }
+                }
+                if repositories.isLoading && repositories.summaries.isEmpty {
+                    Text("Procurando repositórios…").typography(.secundario).foregroundStyle(Theme.textoSecundario)
+                }
             } header: {
-                MonoLabel("Projetos", kind: .secao)
+                MonoLabel(repositories.summaries.isEmpty ? "Repositórios" : "Repositórios · \(repositories.summaries.count)", kind: .secao)
             }
         }
         .listStyle(.sidebar)
         .scrollContentBackground(.hidden)
         .background(Theme.superficie)
-        .safeAreaInset(edge: .top, spacing: 0) {
-            FridayWordmark()
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, Spacing.lg)
-                .padding(.vertical, Spacing.md)
-        }
+        .safeAreaInset(edge: .top, spacing: 0) { projectSwitcher }
         .safeAreaInset(edge: .bottom, spacing: 0) { legend }
-        .navigationSplitViewColumnWidth(min: 210, ideal: 250)
-        .toolbar {
-            ToolbarItem {
-                Button("Adicionar projeto", systemImage: "plus", action: pickFolder)
+        .navigationSplitViewColumnWidth(min: 220, ideal: 260)
+        .task(id: project.path) { await repositories.refresh() }
+    }
+
+    /// Topo da lateral: marca e o projeto aberto, com os recentes e a volta à seleção.
+    private var projectSwitcher: some View {
+        HStack(spacing: Spacing.sm) {
+            FridayMark(size: 20)
+            Menu {
+                ForEach(projects.projects.filter { $0.id != project.id }.prefix(8)) { other in
+                    Button(other.name) { switchProject(other) }
+                }
+                Divider()
+                Button("Todos os projetos…") { switchProject(nil) }
+                    .keyboardShortcut("o", modifiers: [.command, .shift])
+            } label: {
+                HStack(spacing: Spacing.xs) {
+                    Text(project.name).typography(.corpo).fontWeight(.semibold).foregroundStyle(Theme.texto).lineLimit(1)
+                    Image(systemName: "chevron.down").imageScale(.small).foregroundStyle(Theme.textoSecundario)
+                }
             }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .help("Trocar de projeto (⌘⇧O)")
+            Spacer()
         }
-        .alert("Não deu para continuar", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(errorMessage ?? "")
-        }
+        .padding(.horizontal, Spacing.lg)
+        .padding(.vertical, Spacing.md)
     }
 
     private func row(_ destination: Destination, @ViewBuilder label: () -> some View) -> some View {
@@ -104,27 +126,22 @@ struct MainSidebar: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .overlay(alignment: .top) { Rectangle().fill(Theme.linha).frame(height: 1) }
     }
+}
 
-    private func pickFolder() {
-        let panel = NSOpenPanel()
-        panel.canChooseDirectories = true
-        panel.canChooseFiles = false
-        panel.allowsMultipleSelection = false
-        panel.prompt = "Adicionar"
-        guard panel.runModal() == .OK, let url = panel.url else { return }
-        do {
-            if let id = try projects.add(path: url.path).id { selection = .project(id) }
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-    }
+/// Repositório na lateral: nome, branch e quantos arquivos alterados.
+struct RepositoryRow: View {
+    let summary: RepositorySummary
 
-    private func remove(_ project: Project) {
-        do {
-            if let id = project.id, selection == .project(id) { selection = .desk }
-            try projects.remove(project)
-        } catch {
-            errorMessage = error.localizedDescription
+    var body: some View {
+        HStack(spacing: Spacing.sm) {
+            Text(summary.repository.name).typography(.corpo).lineLimit(1)
+            Spacer()
+            if let branch = summary.branch {
+                MonoLabel(summary.changedFiles > 0 ? "\(branch) · \(summary.changedFiles)" : branch)
+                    .lineLimit(1)
+            }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(summary.repository.name), branch \(summary.branch ?? "desconhecida"), \(summary.changedFiles) alterados")
     }
 }

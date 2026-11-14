@@ -101,6 +101,14 @@ private final class InMemoryProjectRepository: ProjectRepository, @unchecked Sen
         return saved
     }
 
+    func markOpened(id: Int64, at date: Date) throws {
+        let (snapshot, listeners) = lock.withLock {
+            if let index = projects.firstIndex(where: { $0.id == id }) { projects[index].lastOpenedAt = date }
+            return (projects, Array(continuations.values))
+        }
+        listeners.forEach { $0.yield(snapshot) }
+    }
+
     func delete(id: Int64) throws {
         let (snapshot, listeners) = lock.withLock {
             projects.removeAll { $0.id == id }

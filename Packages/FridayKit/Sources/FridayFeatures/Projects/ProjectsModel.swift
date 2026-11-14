@@ -14,12 +14,39 @@ public final class ProjectsModel {
 
     private let repository: any ProjectRepository
     private let inspector: any FolderInspecting
+    private let creator: (any ProjectCreating)?
     private let now: @Sendable () -> Date
 
-    public init(repository: any ProjectRepository, inspector: any FolderInspecting, now: @escaping @Sendable () -> Date = Date.init) {
+    public init(
+        repository: any ProjectRepository,
+        inspector: any FolderInspecting,
+        creator: (any ProjectCreating)? = nil,
+        now: @escaping @Sendable () -> Date = Date.init
+    ) {
         self.repository = repository
         self.inspector = inspector
+        self.creator = creator
         self.now = now
+    }
+
+    /// Registra que o projeto foi aberto, para ele subir na seleção.
+    public func markOpened(_ project: Project) throws {
+        guard let id = project.id else { return }
+        try repository.markOpened(id: id, at: now())
+    }
+
+    /// Cria a pasta no disco (com `git init` se pedido) e a cadastra como projeto.
+    public func createFolder(named name: String, in parent: String, initializeGit: Bool) async throws -> Project {
+        guard let creator else { throw ProjectError.commandFailed("Criar pasta não está disponível.") }
+        let path = try await creator.createFolder(named: name, in: parent, initializeGit: initializeGit)
+        return try add(path: path)
+    }
+
+    /// Clona o repositório dentro de `parent` e cadastra o clone como projeto.
+    public func clone(_ url: String, into parent: String) async throws -> Project {
+        guard let creator else { throw ProjectError.commandFailed("Clonar não está disponível.") }
+        let path = try await creator.clone(url, into: parent)
+        return try add(path: path)
     }
 
     /// Espelha o banco até a tarefa que chamou ser cancelada (use dentro de `.task`).

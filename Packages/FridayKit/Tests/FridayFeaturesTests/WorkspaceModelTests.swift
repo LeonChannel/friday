@@ -1,4 +1,4 @@
-// Resumo: Prova que cada projeto mantém as mesmas sessões de terminal ao ir e voltar.
+// Resumo: Prova que cada pasta (raiz do projeto ou repositório) mantém as mesmas sessões, arquivos e repositórios ao ir e voltar.
 // Tags: terminal, interface, testes
 
 import FridayDomain
@@ -10,19 +10,30 @@ import Testing
 struct WorkspaceModelTests {
     private let planner = StubPlanner()
 
-    @Test func returnsSameModelForSameProject() throws {
-        let workspace = WorkspaceModel(planner: planner, events: NoEvents(), subjects: NoSubjects()) { project in ProjectFilesModel(rootPath: project.path, folderReader: EmptyFolders(), gitReader: NoGit(), watcher: SilentWatcher()) }
-        let project = Project(id: 1, name: "a", path: "/tmp/a", kind: .folder, addedAt: .distantPast)
-
-        let first = try #require(workspace.terminals(for: project))
-        #expect(workspace.terminals(for: project) === first)
-        #expect(workspace.visitedProjectIDs == [1])
-        #expect(workspace.files(for: project) === workspace.files(for: project))
+    private func makeWorkspace() -> WorkspaceModel {
+        WorkspaceModel(
+            planner: planner, events: NoEvents(), subjects: NoSubjects(),
+            makeRepositoriesModel: { ProjectRepositoriesModel(projectPath: $0.path, discoverer: NoRepositories(), gitReader: NoGit()) },
+            makeFilesModel: { ProjectFilesModel(rootPath: $0.path, folderReader: EmptyFolders(), gitReader: NoGit(), watcher: SilentWatcher()) }
+        )
     }
 
-    @Test func unsavedProjectHasNoTerminals() {
-        let workspace = WorkspaceModel(planner: planner, events: NoEvents(), subjects: NoSubjects()) { project in ProjectFilesModel(rootPath: project.path, folderReader: EmptyFolders(), gitReader: NoGit(), watcher: SilentWatcher()) }
-        #expect(workspace.terminals(for: Project(name: "x", path: "/tmp/x", kind: .folder, addedAt: .distantPast)) == nil)
+    @Test func returnsSameModelsForSameFolder() {
+        let workspace = makeWorkspace()
+        let project = Project(id: 1, name: "a", path: "/tmp/a", kind: .folder, addedAt: .distantPast)
+
+        #expect(workspace.terminals(for: project) === workspace.terminals(for: project))
+        #expect(workspace.files(for: project) === workspace.files(for: project))
+        #expect(workspace.repositories(for: project) === workspace.repositories(for: project))
+    }
+
+    @Test func repositoryInsideProjectGetsItsOwnTerminals() {
+        let workspace = makeWorkspace()
+        let root = Project(id: 1, name: "evup", path: "/tmp/evup", kind: .folder, addedAt: .distantPast)
+        let repository = Project(name: "api", path: "/tmp/evup/api", kind: .git, addedAt: .distantPast)
+
+        #expect(workspace.terminals(for: root) !== workspace.terminals(for: repository))
+        #expect(workspace.terminals(for: repository).project.path == "/tmp/evup/api")
     }
 }
 
@@ -58,4 +69,8 @@ private struct NoSubjects: SubjectRepository {
     func insert(_ subject: Subject) throws -> Subject { subject }
     func update(id: Int64, _ change: @Sendable (inout Subject) throws -> Void) throws -> Subject { throw CancellationError() }
     func delete(id: Int64) throws {}
+}
+
+private struct NoRepositories: RepositoryDiscovering {
+    func repositories(inProjectAt path: String) -> [CodeRepository] { [] }
 }

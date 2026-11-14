@@ -15,7 +15,7 @@ public struct GRDBProjectRepository: ProjectRepository {
 
     public func observeAll() -> AsyncThrowingStream<[Project], any Error> {
         let values = ValueObservation
-            .tracking { db in try ProjectRecord.order(Column("name").collating(.localizedCaseInsensitiveCompare)).fetchAll(db) }
+            .tracking { db in try ProjectRecord.order(Column("lastOpenedAt").desc, Column("name").collating(.localizedCaseInsensitiveCompare)).fetchAll(db) }
             .values(in: database.writer)
         return AsyncThrowingStream { continuation in
             let task = Task {
@@ -48,6 +48,12 @@ public struct GRDBProjectRepository: ProjectRepository {
     public func delete(id: Int64) throws {
         _ = try database.writer.write { db in try ProjectRecord.deleteOne(db, key: id) }
     }
+
+    public func markOpened(id: Int64, at date: Date) throws {
+        try database.writer.write { db in
+            try db.execute(sql: "UPDATE project SET lastOpenedAt = ? WHERE id = ?", arguments: [date, id])
+        }
+    }
 }
 
 /// Formato da linha no banco; existe para o tipo do Domain não depender do GRDB.
@@ -59,6 +65,7 @@ private struct ProjectRecord: Codable, FetchableRecord, MutablePersistableRecord
     var path: String
     var kind: ProjectKind
     var addedAt: Date
+    var lastOpenedAt: Date?
 
     init(_ project: Project) {
         id = project.id
@@ -66,10 +73,11 @@ private struct ProjectRecord: Codable, FetchableRecord, MutablePersistableRecord
         path = project.path
         kind = project.kind
         addedAt = project.addedAt
+        lastOpenedAt = project.lastOpenedAt
     }
 
     var project: Project {
-        Project(id: id, name: name, path: path, kind: kind, addedAt: addedAt)
+        Project(id: id, name: name, path: path, kind: kind, addedAt: addedAt, lastOpenedAt: lastOpenedAt)
     }
 
     mutating func didInsert(_ inserted: InsertionSuccess) {

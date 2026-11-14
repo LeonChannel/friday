@@ -8,25 +8,37 @@ import Observation
 @MainActor
 @Observable
 public final class WorkspaceModel {
-    public private(set) var terminals: [Int64: TerminalSessionsModel] = [:]
+    public private(set) var terminals: [String: TerminalSessionsModel] = [:]
     private var timelines: [AgentSessionID: SessionTimelineModel] = [:]
-    private var files: [Int64: ProjectFilesModel] = [:]
+    private var files: [String: ProjectFilesModel] = [:]
+    private var repositories: [String: ProjectRepositoriesModel] = [:]
     private var subjectModels: [Int64: SubjectModel] = [:]
     private let planner: any LaunchPlanning
     private let events: any AgentEventRepository
     private let makeFilesModel: @MainActor (Project) -> ProjectFilesModel
+    private let makeRepositoriesModel: @MainActor (Project) -> ProjectRepositoriesModel
     private let subjects: any SubjectRepository
 
     public init(
         planner: any LaunchPlanning,
         events: any AgentEventRepository,
         subjects: any SubjectRepository,
+        makeRepositoriesModel: @escaping @MainActor (Project) -> ProjectRepositoriesModel,
         makeFilesModel: @escaping @MainActor (Project) -> ProjectFilesModel
     ) {
         self.planner = planner
         self.events = events
         self.subjects = subjects
+        self.makeRepositoriesModel = makeRepositoriesModel
         self.makeFilesModel = makeFilesModel
+    }
+
+    /// Repositórios do projeto; a mesma instância a cada chamada.
+    public func repositories(for project: Project) -> ProjectRepositoriesModel {
+        if let existing = repositories[project.path] { return existing }
+        let model = makeRepositoriesModel(project)
+        repositories[project.path] = model
+        return model
     }
 
     /// Model do assunto aberto; a mesma instância a cada chamada.
@@ -38,11 +50,11 @@ public final class WorkspaceModel {
     }
 
     /// Árvore de arquivos e git do projeto; a mesma instância a cada chamada.
-    public func files(for project: Project) -> ProjectFilesModel? {
-        guard let id = project.id else { return nil }
-        if let existing = files[id] { return existing }
+    /// Árvore de arquivos e git da pasta (projeto ou repositório), pela pasta.
+    public func files(for project: Project) -> ProjectFilesModel {
+        if let existing = files[project.path] { return existing }
         let model = makeFilesModel(project)
-        files[id] = model
+        files[project.path] = model
         return model
     }
 
@@ -54,15 +66,11 @@ public final class WorkspaceModel {
         return model
     }
 
-    /// Sessões do projeto; cria o model na primeira chamada.
-    public func terminals(for project: Project) -> TerminalSessionsModel? {
-        guard let id = project.id else { return nil }
-        if let existing = terminals[id] { return existing }
+    /// Sessões de terminal da pasta (projeto ou repositório); cria na primeira chamada.
+    public func terminals(for project: Project) -> TerminalSessionsModel {
+        if let existing = terminals[project.path] { return existing }
         let model = TerminalSessionsModel(project: project, planner: planner)
-        terminals[id] = model
+        terminals[project.path] = model
         return model
     }
-
-    /// Projetos que já têm sessões abertas, para a janela manter os terminais montados.
-    public var visitedProjectIDs: [Int64] { terminals.keys.sorted() }
 }

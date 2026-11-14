@@ -47,12 +47,15 @@ struct FridayApp: App {
             }
         }
 
-        _projects = State(initialValue: ProjectsModel(repository: GRDBProjectRepository(database: database), inspector: LocalFolderInspector()))
+        _projects = State(initialValue: ProjectsModel(
+            repository: GRDBProjectRepository(database: database), inspector: LocalFolderInspector(), creator: GitProjectCreator()
+        ))
         let subjectRepository = GRDBSubjectRepository(database: database)
         _subjects = State(initialValue: SubjectsModel(repository: subjectRepository))
-        _workspace = State(initialValue: WorkspaceModel(planner: DefaultLaunchPlanner(customizer: hooks), events: events, subjects: subjectRepository) { project in
-            ProjectFilesModel(rootPath: project.path, folderReader: LocalFolderReader(), gitReader: GitStatusReader(), watcher: FolderChangeWatcher())
-        })
+        _workspace = State(initialValue: WorkspaceModel(planner: DefaultLaunchPlanner(customizer: hooks), events: events, subjects: subjectRepository,
+            makeRepositoriesModel: { ProjectRepositoriesModel(projectPath: $0.path, discoverer: LocalRepositoryDiscoverer(), gitReader: GitStatusReader()) },
+            makeFilesModel: { ProjectFilesModel(rootPath: $0.path, folderReader: LocalFolderReader(), gitReader: GitStatusReader(), watcher: FolderChangeWatcher()) }
+        ))
     }
 
     var body: some Scene {
@@ -61,7 +64,14 @@ struct FridayApp: App {
                 .environment(projects)
                 .environment(workspace)
                 .environment(subjects)
+                .environment(\.repositoryDiscoverer, LocalRepositoryDiscoverer())
                 .frame(minWidth: 1000, minHeight: 600)
+        }
+        .commands {
+            CommandGroup(after: .newItem) {
+                Button("Trocar de projeto…") { UserDefaults.standard.set(0, forKey: "activeProjectID") }
+                    .keyboardShortcut("o", modifiers: [.command, .shift])
+            }
         }
         Settings {
             SettingsView(settings: settings)

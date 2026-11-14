@@ -4,24 +4,26 @@
 import FridayDomain
 import SwiftUI
 
-/// Janela principal do Friday.
+/// Janela principal do Friday: sem projeto aberto, a seleção de projetos; com projeto, a área de trabalho dele.
 public struct RootView: View {
     @Environment(ProjectsModel.self) private var projects
     @Environment(SubjectsModel.self) private var subjects
     @Environment(WorkspaceModel.self) private var workspace
     @State private var selection: Destination?
     @State private var showsSplash = true
+    /// Projeto aberto (0 = nenhum). Guardado entre aberturas do app e lido também pelo menu do app.
+    @AppStorage("activeProjectID") private var activeProjectID = 0
     @AppStorage("destination") private var storedDestination = Destination.desk.storageKey
 
     public init() {}
 
     public var body: some View {
-        NavigationSplitView {
-            MainSidebar(selection: $selection)
-        } detail: {
-            detail
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Theme.fundo)
+        Group {
+            if let project = activeProject {
+                workspaceView(project)
+            } else {
+                ProjectPickerView(open: open)
+            }
         }
         .overlay {
             if showsSplash {
@@ -30,29 +32,60 @@ public struct RootView: View {
         }
         .task { await projects.observe() }
         .task { await subjects.observe() }
+        .onChange(of: activeProjectID, initial: true) { subjects.projectScope = activeProject?.id }
+        .onChange(of: projects.projects) { subjects.projectScope = activeProject?.id }
+    }
+
+    private func workspaceView(_ project: Project) -> some View {
+        NavigationSplitView {
+            MainSidebar(project: project, selection: $selection, switchProject: { other in
+                if let other { open(other) } else { activeProjectID = 0 }
+            })
+        } detail: {
+            detail(project)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Theme.fundo)
+        }
         .onAppear { if selection == nil { selection = Destination(storageKey: storedDestination) ?? .desk } }
         .onChange(of: selection) { storedDestination = (selection ?? .desk).storageKey }
     }
 
     @ViewBuilder
-    private var detail: some View {
+    private func detail(_ project: Project) -> some View {
         switch selection ?? .desk {
         case .desk:
-            MesaView(open: open)
+            MesaView(open: openSubject)
         case .yourTurn:
-            YourTurnView(open: open)
+            YourTurnView(open: openSubject)
         case .subject(let id):
             SubjectView(model: workspace.subject(id)).id(id)
-        case .project(let id):
-            if let project = projects.projects.first(where: { $0.id == id }) {
-                ProjectWorkspaceView(project: project).id(id)
-            } else {
-                Text("Carregando o projeto…").typography(.secundario).foregroundStyle(Theme.textoSecundario)
-            }
+        case .folder(let path):
+            FolderWorkspaceView(folder: folderProject(path, in: project)).id(path)
         }
     }
 
-    private func open(_ subject: Int64) {
+    private var activeProject: Project? {
+        guard activeProjectID != 0 else { return nil }
+        return projects.projects.first { $0.id == Int64(activeProjectID) }
+    }
+
+    /// A raiz é o próprio projeto; um repositório vira uma pasta de trabalho com o nome dele.
+    private func folderProject(_ path: String, in project: Project) -> Project {
+        if path == project.path { return project }
+        return Project(name: (path as NSString).lastPathComponent, path: path, kind: .git, addedAt: project.addedAt)
+    }
+
+    private func open(_ project: Project) {
+        guard let id = project.id else { return }
+        try? projects.markOpened(project)
+        if Int64(activeProjectID) != id {
+            selection = .desk
+            storedDestination = Destination.desk.storageKey
+        }
+        activeProjectID = Int(id)
+    }
+
+    private func openSubject(_ subject: Int64) {
         selection = .subject(subject)
     }
 }
@@ -83,9 +116,11 @@ private struct PreviewEnvironment {
         _ = try? subjectRepository.insert(try! Subject(title: "Avaliar troca do banco de buscas", createdAt: .now))
         projects = ProjectsModel(repository: projectRepository, inspector: LocalFolderInspector())
         subjects = SubjectsModel(repository: subjectRepository)
-        workspace = WorkspaceModel(planner: DefaultLaunchPlanner(), events: GRDBAgentEventRepository(database: database), subjects: subjectRepository) { project in
-            ProjectFilesModel(rootPath: project.path, folderReader: LocalFolderReader(), gitReader: GitStatusReader(), watcher: FolderChangeWatcher())
-        }
+        workspace = WorkspaceModel(
+            planner: DefaultLaunchPlanner(), events: GRDBAgentEventRepository(database: database), subjects: subjectRepository,
+            makeRepositoriesModel: { ProjectRepositoriesModel(projectPath: $0.path, discoverer: LocalRepositoryDiscoverer(), gitReader: GitStatusReader()) },
+            makeFilesModel: { ProjectFilesModel(rootPath: $0.path, folderReader: LocalFolderReader(), gitReader: GitStatusReader(), watcher: FolderChangeWatcher()) }
+        )
     }
 }
 

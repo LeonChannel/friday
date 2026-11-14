@@ -41,3 +41,18 @@ struct GRDBProjectRepositoryTests {
         #expect(try await iterator.next()?.map(\.name) == ["Alfa", "beta"])
     }
 }
+
+struct GRDBProjectRepositoryOpenedTests {
+    @Test func recentlyOpenedComeFirstThenByName() async throws {
+        let repository = GRDBProjectRepository(database: try AppDatabase.inMemory())
+        let beta = try repository.insert(Project(name: "beta", path: "/tmp/beta", kind: .folder, addedAt: .distantPast))
+        try repository.insert(Project(name: "alfa", path: "/tmp/alfa", kind: .folder, addedAt: .distantPast))
+        try repository.insert(Project(name: "gama", path: "/tmp/gama", kind: .folder, addedAt: .distantPast))
+
+        try repository.markOpened(id: try #require(beta.id), at: Date(timeIntervalSince1970: 100))
+
+        var iterator = repository.observeAll().makeAsyncIterator()
+        let names = try await iterator.next()?.map(\.name)
+        #expect(names == ["beta", "alfa", "gama"])
+    }
+}

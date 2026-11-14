@@ -90,10 +90,10 @@ struct SubjectView: View {
 
     @ViewBuilder
     private func drawer(_ subject: Subject) -> some View {
-        if let project = projects.projects.first(where: { $0.id == subject.projectID }), let terminals = workspace.terminals(for: project) {
-            TerminalArea(model: terminals, sessionEnvironment: ["FRIDAY_ASSUNTO": "\(subject.id ?? 0)"])
+        if let project = projects.projects.first(where: { $0.id == subject.projectID }) {
+            TerminalArea(model: workspace.terminals(for: project), sessionEnvironment: ["FRIDAY_ASSUNTO": "\(subject.id ?? 0)"])
         } else {
-            Text("Ligue o assunto a um projeto (no topo) para abrir o terminal do Claude aqui.")
+            Text("Este assunto não está ligado a um projeto. Ligue no menu do topo para abrir o terminal do Claude aqui.")
                 .typography(.secundario).foregroundStyle(Theme.textoSecundario)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Theme.fundo)

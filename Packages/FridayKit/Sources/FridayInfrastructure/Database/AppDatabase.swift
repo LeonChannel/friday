@@ -75,6 +75,11 @@ public struct AppDatabase: Sendable {
             }
             try db.create(index: "subject_turn", on: "subject", columns: ["turn", "updatedAt"])
         }
+        migrator.registerMigration("v5-project-last-opened") { db in
+            try db.alter(table: "project") { t in
+                t.add(column: "lastOpenedAt", .datetime)
+            }
+        }
         return migrator
     }
 }
