@@ -25,7 +25,7 @@ struct SensorServiceFlowTests {
 
         for name in ["session-start", "user-prompt-submit", "pre-tool-use", "post-tool-use", "stop", "future-event.synthetic"] {
             let run = try runHookScript(
-                script, session: session.description, socket: plan.environment["FRIDAY_SOCKET"],
+                script, session: session.description, socket: environment["FRIDAY_HOOK_SOCKET"],
                 stdin: try FixtureLoader.claude(name)
             )
             #expect(run.status == 0)
