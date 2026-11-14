@@ -6,7 +6,7 @@ App macOS nativo (Swift 6, SwiftUI, macOS 26+). Visão e decisões do produto fi
 
 Leia o guia da área antes de mexer nela. Eles valem como regra, não como sugestão.
 
-- [`docs/VISUAL.md`](docs/VISUAL.md): toda interface. Componentes do sistema, Liquid Glass, cor semântica, estilos de texto, SF Symbols, acessibilidade.
+- [`docs/VISUAL.md`](docs/VISUAL.md): toda interface. Identidade própria, cores de vez (você/Claude), grau da evidência, mapa, tipografia Geist, acessibilidade.
 - [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md): camadas, fluxo de dados, concorrência, persistência, processos e agentes.
 - [`docs/TESTES.md`](docs/TESTES.md): níveis de teste, regras e a evidência mínima de cada fase.
 - [`docs/VOCABULARIO.md`](docs/VOCABULARIO.md): cabeçalho obrigatório de cada arquivo (`// Resumo:` e `// Tags:`) e a lista fechada de tags.

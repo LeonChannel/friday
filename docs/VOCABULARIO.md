@@ -27,3 +27,6 @@ O índice `docs/MAPA.md` é gerado a partir desses cabeçalhos com `swift script
 | `terminal` | terminal embutido, processos e PTY |
 | `sensor` | recebimento dos eventos dos agentes (hooks), socket local e gravação desses eventos |
 | `linha-do-tempo` | projeções dos eventos em linha do tempo, status e esteira |
+| `visual` | tema, cores, tipografia, espaçamentos e componentes visuais próprios do Friday |
+| `assuntos` | o assunto e suas partes (intenção, perguntas, evidências, alternativas, decisões, frentes) e a vez |
+| `configuracoes` | preferências do usuário e a tela de Ajustes |
