@@ -8,7 +8,9 @@ import SwiftUI
 public struct RootView: View {
     @Environment(ProjectsModel.self) private var projects
     @Environment(WorkspaceModel.self) private var workspace
-    @State private var selection: Project.ID?
+    /// Projeto escolhido. Guardado entre aberturas do app; `Project.ID` é opcional, por isso o tipo é `Int64?` direto.
+    @State private var selection: Int64?
+    @AppStorage("selectedProjectID") private var storedSelection = 0
     @State private var showsInspector = true
     @State private var inspectorTab = InspectorTab.session
 
@@ -23,8 +25,8 @@ public struct RootView: View {
                 ForEach(workspace.visitedProjectIDs, id: \.self) { id in
                     if let model = workspace.terminals[id] {
                         TerminalArea(model: model)
-                            .opacity(id == selection ? 1 : 0)
-                            .allowsHitTesting(id == selection)
+                            .opacity(isSelected(id) ? 1 : 0)
+                            .allowsHitTesting(isSelected(id))
                     }
                 }
                 if selectedProject == nil {
@@ -58,8 +60,15 @@ public struct RootView: View {
             }
         }
         .task { await projects.observe() }
-        .onChange(of: selection, initial: true) {
-            if let project = selectedProject { _ = workspace.terminals(for: project) }
+        .onChange(of: selection) {
+            storedSelection = Int(selection ?? 0)
+            openSelectedProject()
+        }
+        .onChange(of: projects.projects) {
+            if selection == nil, storedSelection != 0, projects.projects.contains(where: { $0.id == Int64(storedSelection) }) {
+                selection = Int64(storedSelection)
+            }
+            openSelectedProject()
         }
     }
 
@@ -87,12 +96,22 @@ public struct RootView: View {
     }
 
     private var selectedProject: Project? {
-        projects.projects.first { $0.id == selection }
+        guard let selection else { return nil }
+        return projects.projects.first { $0.id == selection }
     }
 
     private var selectedSession: AgentSessionID? {
-        guard let id = selection ?? nil else { return nil }
-        return workspace.terminals[id]?.selection
+        guard let selection else { return nil }
+        return workspace.terminals[selection]?.selection
+    }
+
+    private func isSelected(_ id: Int64) -> Bool {
+        selection == id
+    }
+
+    /// Garante que o projeto escolhido tem o model de terminais criado (e, com ele, o painel montado).
+    private func openSelectedProject() {
+        if let project = selectedProject { _ = workspace.terminals(for: project) }
     }
 }
 

@@ -2,6 +2,7 @@
 // Tags: terminal, interface
 
 import FridayDomain
+import OSLog
 import SwiftUI
 
 /// Abas de sessões com o terminal da selecionada. Todas as sessões ficam montadas para o processo sobreviver à troca de aba.
@@ -30,6 +31,9 @@ public struct TerminalArea: View {
                     )
                 }
             }
+        }
+        .onAppear {
+            Logger(subsystem: "com.leonchannel.friday", category: "terminal").info("Área de terminais montada para \(model.project.name, privacy: .public)")
         }
         .alert("Não foi possível abrir", isPresented: Binding(get: { model.openError != nil }, set: { if !$0 { model.dismissOpenError() } })) {
             Button("OK") { model.dismissOpenError() }

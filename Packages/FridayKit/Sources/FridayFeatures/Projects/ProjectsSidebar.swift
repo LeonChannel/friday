@@ -7,7 +7,7 @@ import SwiftUI
 
 struct ProjectsSidebar: View {
     @Environment(ProjectsModel.self) private var model
-    @Binding var selection: Project.ID?
+    @Binding var selection: Int64?
     @State private var errorMessage: String?
 
     var body: some View {
