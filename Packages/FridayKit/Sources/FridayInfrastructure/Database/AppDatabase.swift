@@ -41,6 +41,19 @@ public struct AppDatabase: Sendable {
                 t.add(column: "kind", .text).notNull().defaults(to: "folder")
             }
         }
+        migrator.registerMigration("v3-agent-events") { db in
+            try db.create(table: "agentEvent") { t in
+                t.autoIncrementedPrimaryKey("id")
+                t.column("sessionID", .text).notNull()
+                t.column("agent", .text).notNull()
+                t.column("kind", .text).notNull()
+                t.column("occurredAt", .datetime).notNull()
+                t.column("toolName", .text)
+                t.column("target", .text)
+                t.column("rawJSON", .text).notNull()
+            }
+            try db.create(index: "agentEvent_session", on: "agentEvent", columns: ["sessionID", "id"])
+        }
         return migrator
     }
 }
