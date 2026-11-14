@@ -41,7 +41,9 @@ struct FridayApp: App {
         }
 
         _projects = State(initialValue: ProjectsModel(repository: GRDBProjectRepository(database: database), inspector: LocalFolderInspector()))
-        _workspace = State(initialValue: WorkspaceModel(planner: DefaultLaunchPlanner(customizer: hooks), events: events))
+        _workspace = State(initialValue: WorkspaceModel(planner: DefaultLaunchPlanner(customizer: hooks), events: events) { project in
+            ProjectFilesModel(rootPath: project.path, folderReader: LocalFolderReader(), gitReader: GitStatusReader(), watcher: FolderChangeWatcher())
+        })
     }
 
     var body: some Scene {

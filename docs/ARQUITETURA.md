@@ -77,7 +77,8 @@ flowchart LR
 
 ## Processos e agentes
 
-- Processo filho é sempre iniciado por um único serviço (`ProcessLauncher`), que define ambiente, diretório e limpeza. Nenhuma outra parte chama `Process` ou `forkpty` direto.
+- Processo filho tem duas portas, e só elas: sessões interativas (shell e agentes) saem de um `LaunchPlan` montado pelo `DefaultLaunchPlanner` e rodam no PTY do SwiftTerm; comandos curtos com saída lida (como `git status`) passam pelo `CommandRunner`. Nenhuma outra parte chama `Process` ou `forkpty` direto.
+- App de interface não herda o PATH do shell do usuário. Agentes rodam por `$SHELL -l -i -c 'exec ...'`; ferramentas do sistema usam caminho absoluto (`/usr/bin/git`).
 - O ambiente do agente recebe as variáveis do Friday (`FRIDAY_SESSION_ID`, caminho do socket) e um arquivo de settings próprio da sessão. Nada é escrito em `~/.claude` ou `~/.codex`.
 - Encerrar o app encerra os processos que ele iniciou, a menos que uma decisão futura sobre sessões persistentes diga o contrário.
 

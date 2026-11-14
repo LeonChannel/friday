@@ -1,5 +1,5 @@
-// Resumo: Guarda as sessões de terminal de cada projeto aberto e a linha do tempo de cada sessão, para trocar de projeto sem perder nada.
-// Tags: terminal, linha-do-tempo, interface
+// Resumo: Guarda por projeto as sessões de terminal, a linha do tempo de cada sessão e a árvore de arquivos, para trocar de projeto sem perder nada.
+// Tags: terminal, linha-do-tempo, pastas, interface
 
 import FridayDomain
 import Observation
@@ -10,12 +10,24 @@ import Observation
 public final class WorkspaceModel {
     public private(set) var terminals: [Int64: TerminalSessionsModel] = [:]
     private var timelines: [AgentSessionID: SessionTimelineModel] = [:]
+    private var files: [Int64: ProjectFilesModel] = [:]
     private let planner: any LaunchPlanning
     private let events: any AgentEventRepository
+    private let makeFilesModel: @MainActor (Project) -> ProjectFilesModel
 
-    public init(planner: any LaunchPlanning, events: any AgentEventRepository) {
+    public init(planner: any LaunchPlanning, events: any AgentEventRepository, makeFilesModel: @escaping @MainActor (Project) -> ProjectFilesModel) {
         self.planner = planner
         self.events = events
+        self.makeFilesModel = makeFilesModel
+    }
+
+    /// Árvore de arquivos e git do projeto; a mesma instância a cada chamada.
+    public func files(for project: Project) -> ProjectFilesModel? {
+        guard let id = project.id else { return nil }
+        if let existing = files[id] { return existing }
+        let model = makeFilesModel(project)
+        files[id] = model
+        return model
     }
 
     /// Linha do tempo da sessão; a mesma instância a cada chamada.
