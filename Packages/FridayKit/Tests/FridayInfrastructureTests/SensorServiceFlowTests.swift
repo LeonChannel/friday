@@ -17,15 +17,15 @@ struct SensorServiceFlowTests {
         try await service.start()
 
         let session = AgentSessionID()
-        let plan = try ClaudeSessionHooks(locations: locations).apply(
-            to: LaunchPlan(executable: "claude", arguments: [], environment: [:], workingDirectory: "/"), session: session
-        )
+        let hooks = ClaudeSessionHooks(locations: locations)
+        _ = try hooks.extraArguments(agent: .claude, session: session)
+        let environment = try hooks.extraEnvironment(agent: .claude, session: session)
         let script = locations.hooksDirectory.appendingPathComponent(HookScript.fileName)
         let stream = repository.observe(session: session)
 
         for name in ["session-start", "user-prompt-submit", "pre-tool-use", "post-tool-use", "stop", "future-event.synthetic"] {
             let run = try runHookScript(
-                script, session: plan.environment["FRIDAY_SESSION_ID"], socket: plan.environment["FRIDAY_SOCKET"],
+                script, session: session.description, socket: plan.environment["FRIDAY_SOCKET"],
                 stdin: try FixtureLoader.claude(name)
             )
             #expect(run.status == 0)

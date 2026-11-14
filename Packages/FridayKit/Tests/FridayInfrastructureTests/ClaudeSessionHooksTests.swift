@@ -8,34 +8,36 @@ import Testing
 
 @Suite("ClaudeSessionHooks")
 struct ClaudeSessionHooksTests {
-    private func makePlan() -> LaunchPlan {
-        LaunchPlan(executable: "/usr/local/bin/claude", arguments: ["--session-id", "x"], environment: ["HOME": "/h"], workingDirectory: "/p")
-    }
-
-    @Test func addsSettingsFlagAndEnvironment() throws {
+    @Test func claudeGetsSettingsFlagAndSocketVariable() throws {
         let dir = try ShortTemporaryDirectory()
         defer { dir.remove() }
         let locations = SensorLocations(root: dir.url)
         let session = AgentSessionID()
-        let plan = try ClaudeSessionHooks(locations: locations).apply(to: makePlan(), session: session)
+        let hooks = ClaudeSessionHooks(locations: locations)
 
         let settingsPath = locations.sessionsDirectory.appendingPathComponent("\(session).settings.json").path
-        #expect(plan.arguments == ["--settings", settingsPath, "--session-id", "x"])
-        #expect(plan.environment["FRIDAY_SESSION_ID"] == session.description)
-        #expect(plan.environment["FRIDAY_SOCKET"] == locations.socketPath)
-        #expect(plan.environment["HOME"] == "/h")
-        #expect(plan.executable == "/usr/local/bin/claude")
-        #expect(plan.workingDirectory == "/p")
+        #expect(try hooks.extraArguments(agent: .claude, session: session) == ["--settings", settingsPath])
+        #expect(try hooks.extraEnvironment(agent: .claude, session: session) == ["FRIDAY_HOOK_SOCKET": locations.socketPath])
+    }
+
+    @Test func otherAgentsGetNothing() throws {
+        let dir = try ShortTemporaryDirectory()
+        defer { dir.remove() }
+        let hooks = ClaudeSessionHooks(locations: SensorLocations(root: dir.url))
+        for agent in [AgentKind.shell, .codex] {
+            #expect(try hooks.extraArguments(agent: agent, session: AgentSessionID()).isEmpty)
+            #expect(try hooks.extraEnvironment(agent: agent, session: AgentSessionID()).isEmpty)
+        }
+        #expect(!FileManager.default.fileExists(atPath: dir.url.appendingPathComponent("sessions").path))
     }
 
     @Test func settingsFileHooksEveryEventToTheScript() throws {
         let dir = try ShortTemporaryDirectory()
         defer { dir.remove() }
         let locations = SensorLocations(root: dir.url)
-        let session = AgentSessionID()
-        let plan = try ClaudeSessionHooks(locations: locations).apply(to: makePlan(), session: session)
+        let arguments = try ClaudeSessionHooks(locations: locations).extraArguments(agent: .claude, session: AgentSessionID())
 
-        let data = try Data(contentsOf: URL(fileURLWithPath: plan.arguments[1]))
+        let data = try Data(contentsOf: URL(fileURLWithPath: arguments[1]))
         let root = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
         let hooks = try #require(root["hooks"] as? [String: Any])
         #expect(Set(hooks.keys) == Set(ClaudeSessionHooks.hookEvents))
@@ -46,6 +48,20 @@ struct ClaudeSessionHooksTests {
             #expect(commands.first?["command"] as? String == "'\(script)' claude")
         }
         #expect(FileManager.default.isExecutableFile(atPath: script))
+    }
+
+    @Test func removesOldSettingsButKeepsRecentOnes() throws {
+        let dir = try ShortTemporaryDirectory()
+        defer { dir.remove() }
+        let locations = SensorLocations(root: dir.url)
+        let hooks = ClaudeSessionHooks(locations: locations)
+        let old = try hooks.extraArguments(agent: .claude, session: AgentSessionID())[1]
+        let recent = try hooks.extraArguments(agent: .claude, session: AgentSessionID())[1]
+        try FileManager.default.setAttributes([.modificationDate: Date(timeIntervalSinceNow: -8 * 24 * 3600)], ofItemAtPath: old)
+
+        _ = try hooks.extraArguments(agent: .claude, session: AgentSessionID())
+        #expect(!FileManager.default.fileExists(atPath: old))
+        #expect(FileManager.default.fileExists(atPath: recent))
     }
 
     @Test func quotesScriptPathsWithSpacesAndQuotes() throws {
@@ -62,8 +78,8 @@ struct ClaudeSessionHooksTests {
         let dir = try ShortTemporaryDirectory()
         defer { dir.remove() }
         let hooks = ClaudeSessionHooks(locations: SensorLocations(root: dir.url))
-        let a = try hooks.apply(to: makePlan(), session: AgentSessionID())
-        let b = try hooks.apply(to: makePlan(), session: AgentSessionID())
-        #expect(a.arguments[1] != b.arguments[1])
+        let a = try hooks.extraArguments(agent: .claude, session: AgentSessionID())
+        let b = try hooks.extraArguments(agent: .claude, session: AgentSessionID())
+        #expect(a[1] != b[1])
     }
 }

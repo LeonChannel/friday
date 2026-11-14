@@ -4,9 +4,12 @@
 import FridayDomain
 import Foundation
 
-/// Acrescenta a um `LaunchPlan` do Claude os hooks do Friday, sem tocar em `~/.claude`.
+/// Dá ao planner os acréscimos do Claude (`--settings` e ambiente) para reportar hooks ao Friday, sem tocar em `~/.claude`.
 /// Os hooks de `--settings` somam aos do usuário e do projeto; não os substituem.
-public struct ClaudeSessionHooks: Sendable {
+public struct ClaudeSessionHooks: AgentLaunchCustomizing {
+    /// Settings de sessões com mais de 7 dias são apagados.
+    static let settingsMaxAge: TimeInterval = 7 * 24 * 3600
+
     /// Eventos que o Friday acompanha.
     static let hookEvents = [
         "SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse", "Notification",
@@ -19,16 +22,28 @@ public struct ClaudeSessionHooks: Sendable {
         self.locations = locations
     }
 
-    /// Devolve o plano com `--settings <arquivo da sessão>` e as variáveis `FRIDAY_SESSION_ID` e `FRIDAY_SOCKET`.
-    /// Quem monta o plano continua responsável por passar `--session-id` com o mesmo valor de `session`.
-    public func apply(to plan: LaunchPlan, session: AgentSessionID) throws -> LaunchPlan {
+    /// `["--settings", <arquivo da sessão>]` só para o Claude; grava o script e o settings e apaga settings antigos.
+    public func extraArguments(agent: AgentKind, session: AgentSessionID) throws -> [String] {
+        guard agent == .claude else { return [] }
         let script = try HookScript.install(in: locations.hooksDirectory)
         let settings = try writeSettings(session: session, script: script)
-        var result = plan
-        result.arguments = ["--settings", settings.path] + plan.arguments
-        result.environment["FRIDAY_SESSION_ID"] = session.description
-        result.environment["FRIDAY_SOCKET"] = locations.socketPath
-        return result
+        removeStaleSettings(keeping: settings)
+        return ["--settings", settings.path]
+    }
+
+    /// `FRIDAY_HOOK_SOCKET` para o script de hook achar o socket. `FRIDAY_SESSION_ID` já vem do planner.
+    public func extraEnvironment(agent: AgentKind, session: AgentSessionID) throws -> [String: String] {
+        agent == .claude ? ["FRIDAY_HOOK_SOCKET": locations.socketPath] : [:]
+    }
+
+    private func removeStaleSettings(keeping current: URL) {
+        let fm = FileManager.default
+        let limit = Date(timeIntervalSinceNow: -Self.settingsMaxAge)
+        let files = (try? fm.contentsOfDirectory(at: locations.sessionsDirectory, includingPropertiesForKeys: [.contentModificationDateKey])) ?? []
+        for file in files where file != current && file.lastPathComponent.hasSuffix(".settings.json") {
+            let modified = (try? file.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantFuture
+            if modified < limit { try? fm.removeItem(at: file) }
+        }
     }
 
     /// Conteúdo do settings da sessão: um hook de comando por evento, todos chamando o mesmo script.
