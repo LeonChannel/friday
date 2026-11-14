@@ -2,11 +2,20 @@
 
 App macOS nativo (Swift 6, SwiftUI, macOS 26+). Visão e decisões do produto ficam no vault pessoal, fora deste repo; este arquivo guarda só as regras de engenharia.
 
+## Guias obrigatórios
+
+Leia o guia da área antes de mexer nela. Eles valem como regra, não como sugestão.
+
+- [`docs/VISUAL.md`](docs/VISUAL.md): toda interface. Componentes do sistema, Liquid Glass, cor semântica, estilos de texto, SF Symbols, acessibilidade.
+- [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md): camadas, fluxo de dados, concorrência, persistência, processos e agentes.
+- [`docs/TESTES.md`](docs/TESTES.md): níveis de teste, regras e a evidência mínima de cada fase.
+
+Mudou uma decisão de qualquer uma dessas áreas? O guia muda no mesmo PR.
+
 ## Projeto
 
 - O `Friday.xcodeproj` é gerado: edite `project.yml` e rode `xcodegen generate`. Nunca edite o `.xcodeproj` à mão.
 - Dependências por Swift Package Manager, declaradas no `project.yml`.
-- Banco local: SQLite via GRDB, em `~/Library/Application Support/Friday/`. Toda mudança de schema é uma migração nova no `DatabaseMigrator`; migração existente não muda.
 
 ## Verificar
 
@@ -14,8 +23,7 @@ App macOS nativo (Swift 6, SwiftUI, macOS 26+). Visão e decisões do produto fi
 xcodegen generate && xcodebuild -project Friday.xcodeproj -scheme Friday -destination 'platform=macOS' -derivedDataPath build -skipPackagePluginValidation test
 ```
 
-- Testes com Swift Testing (`import Testing`), um arquivo por tipo testado em `FridayTests/`.
-- Para ver o app rodando, abra com `open -g` (sem trazer a janela para frente). Nunca roube o foco do usuário.
+Para ver o app rodando, abra com `open -g` (sem trazer a janela para frente). Nunca roube o foco do usuário.
 
 ## Regras
 
