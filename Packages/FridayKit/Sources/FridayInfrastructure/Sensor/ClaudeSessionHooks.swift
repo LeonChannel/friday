@@ -48,7 +48,7 @@ public struct ClaudeSessionHooks: AgentLaunchCustomizing {
 
     /// Conteúdo do settings da sessão: um hook de comando por evento, todos chamando o mesmo script.
     func settingsData(script: URL) throws -> Data {
-        let command = "\(Self.shellQuoted(script.path)) claude"
+        let command = HookScript.commandLine(script: script, agent: "claude")
         let entry: [String: Any] = ["hooks": [["type": "command", "command": command, "timeout": 5]]]
         let hooks = Dictionary(uniqueKeysWithValues: Self.hookEvents.map { ($0, [entry]) })
         return try JSONSerialization.data(withJSONObject: ["hooks": hooks], options: [.prettyPrinted, .sortedKeys])
@@ -61,9 +61,5 @@ public struct ClaudeSessionHooks: AgentLaunchCustomizing {
         let url = locations.sessionsDirectory.appendingPathComponent("\(session).settings.json")
         try settingsData(script: script).write(to: url, options: .atomic)
         return url
-    }
-
-    private static func shellQuoted(_ text: String) -> String {
-        "'" + text.replacingOccurrences(of: "'", with: "'\\''") + "'"
     }
 }

@@ -10,6 +10,8 @@ public enum AgentEventKind: Hashable, Sendable {
     case preToolUse
     case postToolUse
     case notification
+    /// Pedido de permissão do Codex (`PermissionRequest`): o agente espera o dev decidir.
+    case permissionRequest
     case stop
     case subagentStop
     case sessionEnd
@@ -17,7 +19,7 @@ public enum AgentEventKind: Hashable, Sendable {
     /// Evento que esta versão do Friday não reconhece; guarda o nome como veio.
     case unknown(String)
 
-    /// Converte o `hook_event_name` do Claude Code.
+    /// Converte o `hook_event_name` do Claude Code ou do Codex (os dois usam os mesmos nomes).
     public init(hookName: String) {
         switch hookName {
         case "SessionStart": self = .sessionStart
@@ -25,6 +27,7 @@ public enum AgentEventKind: Hashable, Sendable {
         case "PreToolUse": self = .preToolUse
         case "PostToolUse": self = .postToolUse
         case "Notification": self = .notification
+        case "PermissionRequest": self = .permissionRequest
         case "Stop": self = .stop
         case "SubagentStop": self = .subagentStop
         case "SessionEnd": self = .sessionEnd
@@ -41,6 +44,7 @@ public enum AgentEventKind: Hashable, Sendable {
         case .preToolUse: "PreToolUse"
         case .postToolUse: "PostToolUse"
         case .notification: "Notification"
+        case .permissionRequest: "PermissionRequest"
         case .stop: "Stop"
         case .subagentStop: "SubagentStop"
         case .sessionEnd: "SessionEnd"
@@ -59,9 +63,9 @@ public struct AgentEvent: Equatable, Sendable, Identifiable {
     public var kind: AgentEventKind
     /// Momento em que o Friday recebeu o evento (o payload do hook não traz horário).
     public var occurredAt: Date
-    /// Ferramenta envolvida (`Bash`, `Edit`...), quando o evento é de ferramenta.
+    /// Ferramenta envolvida (`Bash`, `Edit`...), quando o evento é de ferramenta; no `SubagentStop`, o tipo do subagente.
     public var toolName: String?
-    /// Arquivo ou comando que a ferramenta usou, quando houver.
+    /// Arquivo ou comando que a ferramenta usou, quando houver; no `SubagentStop`, a descrição do subagente.
     public var target: String?
     /// Payload completo como o agente enviou.
     public var rawJSON: String
