@@ -17,9 +17,8 @@ struct SensorServiceFlowTests {
         try await service.start()
 
         let session = AgentSessionID()
-        let plan = try ClaudeSessionHooks(locations: locations).apply(
-            to: LaunchPlan(executable: "claude", arguments: [], environment: [:], workingDirectory: "/"), session: session
-        )
+        let project = Project(name: "p", path: "/", kind: .folder, addedAt: .distantPast)
+        let plan = try DefaultLaunchPlanner(customizer: ClaudeSessionHooks(locations: locations)).plan(agent: .claude, project: project, session: session)
         let script = locations.hooksDirectory.appendingPathComponent(HookScript.fileName)
         let stream = repository.observe(session: session)
 

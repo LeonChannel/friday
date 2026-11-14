@@ -1,14 +1,16 @@
-// Resumo: Ponto de entrada do app: abre o banco local e monta as dependências reais de cada funcionalidade.
+// Resumo: Ponto de entrada do app: abre o banco, liga o sensor de hooks e monta as dependências reais de cada funcionalidade.
 // Tags: composicao
 
 import FridayFeatures
 import FridayInfrastructure
+import OSLog
 import SwiftUI
 
 @main
 struct FridayApp: App {
     @State private var projects: ProjectsModel
-    @State private var workspace = WorkspaceModel(planner: DefaultLaunchPlanner())
+    @State private var workspace: WorkspaceModel
+    private let sensor: SensorService?
 
     init() {
         let database: AppDatabase
@@ -17,10 +19,29 @@ struct FridayApp: App {
         } catch {
             fatalError("Não consegui abrir o banco do Friday: \(error)")
         }
-        _projects = State(initialValue: ProjectsModel(
-            repository: GRDBProjectRepository(database: database),
-            inspector: LocalFolderInspector()
-        ))
+        let events = GRDBAgentEventRepository(database: database)
+
+        // Sem sensor o terminal ainda funciona; só a linha do tempo fica vazia.
+        var hooks: ClaudeSessionHooks?
+        var sensor: SensorService?
+        do {
+            let locations = try SensorLocations.live()
+            hooks = ClaudeSessionHooks(locations: locations)
+            sensor = SensorService(server: HookSocketServer(socketPath: locations.socketPath), repository: events)
+        } catch {
+            Logger(subsystem: "com.leonchannel.friday", category: "sensor").error("Sensor desligado: \(error.localizedDescription, privacy: .public)")
+        }
+        self.sensor = sensor
+        if let sensor {
+            Task {
+                do { try await sensor.start() } catch {
+                    Logger(subsystem: "com.leonchannel.friday", category: "sensor").error("Sensor não iniciou: \(error.localizedDescription, privacy: .public)")
+                }
+            }
+        }
+
+        _projects = State(initialValue: ProjectsModel(repository: GRDBProjectRepository(database: database), inspector: LocalFolderInspector()))
+        _workspace = State(initialValue: WorkspaceModel(planner: DefaultLaunchPlanner(customizer: hooks), events: events))
     }
 
     var body: some Scene {
@@ -28,7 +49,7 @@ struct FridayApp: App {
             RootView()
                 .environment(projects)
                 .environment(workspace)
-                .frame(minWidth: 900, minHeight: 560)
+                .frame(minWidth: 1000, minHeight: 600)
         }
     }
 }

@@ -10,12 +10,13 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 | [`AgentSessionID.swift`](../Packages/FridayKit/Sources/FridayDomain/Agents/AgentSessionID.swift) | Domain | Identificador único de uma sessão de agente aberta pelo Friday, que liga terminal, hooks e eventos. |
 | [`LaunchPlan.swift`](../Packages/FridayKit/Sources/FridayDomain/Agents/LaunchPlan.swift) | Domain | Receita para abrir um programa no terminal (executável, argumentos, ambiente e pasta) e quem monta essa receita. |
 | [`AgentEvent.swift`](../Packages/FridayKit/Sources/FridayDomain/Sensor/AgentEvent.swift) | Domain | Um acontecimento numa sessão de agente (prompt enviado, ferramenta usada, fim de turno...) já separado do JSON bruto do hook. |
+| [`SessionActivity.swift`](../Packages/FridayKit/Sources/FridayDomain/Timeline/SessionActivity.swift) | Domain | Resume uma sessão a partir dos eventos gravados (fase atual, arquivos alterados, ferramentas usadas) sem pedir nada à IA. |
 | [`TerminalSessionsModel.swift`](../Packages/FridayKit/Sources/FridayFeatures/Terminal/TerminalSessionsModel.swift) | Features | Sessões de terminal abertas num projeto: abrir shell, Claude ou Codex, fechar, escolher a ativa e registrar o fim do processo. |
-| [`ClaudeSessionHooks.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Sensor/ClaudeSessionHooks.swift) | Infrastructure | Prepara uma sessão do Claude Code para reportar hooks ao Friday: settings próprio da sessão, variáveis de ambiente e o flag --settings. |
+| [`ClaudeSessionHooks.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Sensor/ClaudeSessionHooks.swift) | Infrastructure | Prepara uma sessão do Claude Code para reportar hooks ao Friday: grava o settings da sessão e entrega o --settings e o socket ao planner. |
 | [`HookScript.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Sensor/HookScript.swift) | Infrastructure | Script de shell que o agente chama a cada hook: repassa o JSON ao socket do Friday e nunca atrasa nem derruba o agente. |
 | [`DefaultLaunchPlanner.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Terminal/DefaultLaunchPlanner.swift) | Infrastructure | Monta a receita de cada sessão (shell, Claude, Codex) passando pelo shell de login do usuário para achar os executáveis. |
 | [`TerminalSessionsModelTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/TerminalSessionsModelTests.swift) | Teste | Prova o estado das sessões de terminal: abrir, numerar títulos, selecionar, fechar e registrar o fim do processo. |
-| [`ClaudeSessionHooksTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/ClaudeSessionHooksTests.swift) | Teste | Testa que o plano do Claude ganha --settings e as variáveis do Friday, e que o settings gerado cobre os hooks sem tocar na config global. |
+| [`ClaudeSessionHooksTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/ClaudeSessionHooksTests.swift) | Teste | Prova que o Claude recebe --settings e o socket, que o comando final passa pelo shell intacto e que o settings cobre todos os hooks. |
 | [`DefaultLaunchPlannerTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/DefaultLaunchPlannerTests.swift) | Teste | Prova a receita de cada agente: executável, argumentos, ambiente limpo e pasta do projeto. |
 | [`LaunchCustomizationTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/LaunchCustomizationTests.swift) | Teste | Prova que os acréscimos por sessão chegam ao agente intactos, mesmo com espaço e aspas no caminho. |
 
@@ -23,7 +24,7 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 
 | Arquivo | Camada | Resumo |
 |---|---|---|
-| [`FridayApp.swift`](../Friday/App/FridayApp.swift) | App | Ponto de entrada do app: abre o banco local e monta as dependências reais de cada funcionalidade. |
+| [`FridayApp.swift`](../Friday/App/FridayApp.swift) | App | Ponto de entrada do app: abre o banco, liga o sensor de hooks e monta as dependências reais de cada funcionalidade. |
 
 ## git
 
@@ -38,13 +39,25 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 |---|---|---|
 | [`ProjectsModel.swift`](../Packages/FridayKit/Sources/FridayFeatures/Projects/ProjectsModel.swift) | Features | Estado da lista de projetos na tela: adiciona com validação, remove e acompanha o banco ao vivo. |
 | [`ProjectsSidebar.swift`](../Packages/FridayKit/Sources/FridayFeatures/Projects/ProjectsSidebar.swift) | Features | Barra lateral com os projetos: escolher pasta para adicionar, remover pelo menu de contexto e mostrar erros. |
-| [`RootView.swift`](../Packages/FridayKit/Sources/FridayFeatures/Shell/RootView.swift) | Features | Janela principal: barra lateral de projetos e, à direita, os terminais do projeto escolhido, com prévias de exemplo. |
-| [`WorkspaceModel.swift`](../Packages/FridayKit/Sources/FridayFeatures/Shell/WorkspaceModel.swift) | Features | Guarda as sessões de terminal de cada projeto aberto, para trocar de projeto sem matar o que está rodando. |
+| [`RootView.swift`](../Packages/FridayKit/Sources/FridayFeatures/Shell/RootView.swift) | Features | Janela principal: projetos na lateral, terminais do projeto no centro e a linha do tempo da sessão no inspetor. |
+| [`WorkspaceModel.swift`](../Packages/FridayKit/Sources/FridayFeatures/Shell/WorkspaceModel.swift) | Features | Guarda as sessões de terminal de cada projeto aberto e a linha do tempo de cada sessão, para trocar de projeto sem perder nada. |
 | [`TerminalArea.swift`](../Packages/FridayKit/Sources/FridayFeatures/Terminal/TerminalArea.swift) | Features | Área de terminais de um projeto: abas das sessões, botões para abrir shell, Claude Code e Codex, e prévias. |
 | [`TerminalSessionView.swift`](../Packages/FridayKit/Sources/FridayFeatures/Terminal/TerminalSessionView.swift) | Features | Mostra um terminal de verdade (SwiftTerm) rodando a receita de uma sessão e avisa quando o processo termina. |
 | [`TerminalSessionsModel.swift`](../Packages/FridayKit/Sources/FridayFeatures/Terminal/TerminalSessionsModel.swift) | Features | Sessões de terminal abertas num projeto: abrir shell, Claude ou Codex, fechar, escolher a ativa e registrar o fim do processo. |
+| [`SessionTimelineModel.swift`](../Packages/FridayKit/Sources/FridayFeatures/Timeline/SessionTimelineModel.swift) | Features | Acompanha ao vivo os eventos de uma sessão de agente e o resumo deduzido deles, para o painel da linha do tempo. |
+| [`SessionTimelineView.swift`](../Packages/FridayKit/Sources/FridayFeatures/Timeline/SessionTimelineView.swift) | Features | Painel da sessão: fase atual, arquivos alterados e a linha do tempo dos eventos do agente, mais recente em cima. |
 | [`ProjectsModelTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/ProjectsModelTests.swift) | Teste | Prova o cadastro de projetos na tela: normaliza caminho, recusa inválido e duplicado, espelha o banco. |
 | [`WorkspaceModelTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/WorkspaceModelTests.swift) | Teste | Prova que cada projeto mantém as mesmas sessões de terminal ao ir e voltar. |
+
+## linha-do-tempo
+
+| Arquivo | Camada | Resumo |
+|---|---|---|
+| [`SessionActivity.swift`](../Packages/FridayKit/Sources/FridayDomain/Timeline/SessionActivity.swift) | Domain | Resume uma sessão a partir dos eventos gravados (fase atual, arquivos alterados, ferramentas usadas) sem pedir nada à IA. |
+| [`WorkspaceModel.swift`](../Packages/FridayKit/Sources/FridayFeatures/Shell/WorkspaceModel.swift) | Features | Guarda as sessões de terminal de cada projeto aberto e a linha do tempo de cada sessão, para trocar de projeto sem perder nada. |
+| [`SessionTimelineModel.swift`](../Packages/FridayKit/Sources/FridayFeatures/Timeline/SessionTimelineModel.swift) | Features | Acompanha ao vivo os eventos de uma sessão de agente e o resumo deduzido deles, para o painel da linha do tempo. |
+| [`SessionTimelineView.swift`](../Packages/FridayKit/Sources/FridayFeatures/Timeline/SessionTimelineView.swift) | Features | Painel da sessão: fase atual, arquivos alterados e a linha do tempo dos eventos do agente, mais recente em cima. |
+| [`SessionActivityTests.swift`](../Packages/FridayKit/Tests/FridayDomainTests/SessionActivityTests.swift) | Teste | Prova que a fase da sessão, os arquivos alterados e as contagens saem certos de uma sequência de eventos. |
 
 ## pastas
 
@@ -91,7 +104,7 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 | [`AgentEvent.swift`](../Packages/FridayKit/Sources/FridayDomain/Sensor/AgentEvent.swift) | Domain | Um acontecimento numa sessão de agente (prompt enviado, ferramenta usada, fim de turno...) já separado do JSON bruto do hook. |
 | [`AgentEventDecoder.swift`](../Packages/FridayKit/Sources/FridayDomain/Sensor/AgentEventDecoder.swift) | Domain | Lê a mensagem que o script de hook manda (linha de cabeçalho com agente e sessão, depois o JSON) e monta o evento. |
 | [`AgentEventRepository.swift`](../Packages/FridayKit/Sources/FridayDomain/Sensor/AgentEventRepository.swift) | Domain | Contrato de onde os eventos dos agentes ficam guardados e como a tela os acompanha ao vivo. |
-| [`ClaudeSessionHooks.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Sensor/ClaudeSessionHooks.swift) | Infrastructure | Prepara uma sessão do Claude Code para reportar hooks ao Friday: settings próprio da sessão, variáveis de ambiente e o flag --settings. |
+| [`ClaudeSessionHooks.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Sensor/ClaudeSessionHooks.swift) | Infrastructure | Prepara uma sessão do Claude Code para reportar hooks ao Friday: grava o settings da sessão e entrega o --settings e o socket ao planner. |
 | [`GRDBAgentEventRepository.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Sensor/GRDBAgentEventRepository.swift) | Infrastructure | Guarda os eventos dos agentes no banco e avisa a tela a cada novo evento, por sessão ou os mais recentes de todas. |
 | [`HookScript.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Sensor/HookScript.swift) | Infrastructure | Script de shell que o agente chama a cada hook: repassa o JSON ao socket do Friday e nunca atrasa nem derruba o agente. |
 | [`HookSocketServer.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Sensor/HookSocketServer.swift) | Infrastructure | Servidor local (Unix socket) que recebe uma mensagem por conexão dos scripts de hook dos agentes e a entrega ao app. |
@@ -99,7 +112,7 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 | [`SensorService.swift`](../Packages/FridayKit/Sources/FridayInfrastructure/Sensor/SensorService.swift) | Infrastructure | Liga o sensor: abre o socket dos hooks, decodifica cada mensagem recebida e grava o evento no banco. |
 | [`AgentEventDecoderTests.swift`](../Packages/FridayKit/Tests/FridayDomainTests/AgentEventDecoderTests.swift) | Teste | Testa a leitura de payloads reais do Claude Code (e de eventos desconhecidos) e a rejeição de mensagens inválidas. |
 | [`FixtureLoader.swift`](../Packages/FridayKit/Tests/FridayDomainTests/FixtureLoader.swift) | Teste | Lê os payloads de hook gravados em Tests/Fixtures para os testes de domínio. |
-| [`ClaudeSessionHooksTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/ClaudeSessionHooksTests.swift) | Teste | Testa que o plano do Claude ganha --settings e as variáveis do Friday, e que o settings gerado cobre os hooks sem tocar na config global. |
+| [`ClaudeSessionHooksTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/ClaudeSessionHooksTests.swift) | Teste | Prova que o Claude recebe --settings e o socket, que o comando final passa pelo shell intacto e que o settings cobre todos os hooks. |
 | [`FixtureLoader.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/FixtureLoader.swift) | Teste | Lê os payloads de hook gravados em Tests/Fixtures para os testes de domínio. |
 | [`GRDBAgentEventRepositoryTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/GRDBAgentEventRepositoryTests.swift) | Teste | Testa a gravação e a observação dos eventos dos agentes no banco em memória. |
 | [`HookScriptTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/HookScriptTests.swift) | Teste | Prova o script de hook de verdade: entrega ao servidor, sai 0 rápido com o Friday fechado e não trava com servidor parado. |
@@ -113,7 +126,7 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 |---|---|---|
 | [`AgentKind.swift`](../Packages/FridayKit/Sources/FridayDomain/Agents/AgentKind.swift) | Domain | Quais programas o Friday sabe abrir num terminal: shell comum, Claude Code e Codex. |
 | [`LaunchPlan.swift`](../Packages/FridayKit/Sources/FridayDomain/Agents/LaunchPlan.swift) | Domain | Receita para abrir um programa no terminal (executável, argumentos, ambiente e pasta) e quem monta essa receita. |
-| [`WorkspaceModel.swift`](../Packages/FridayKit/Sources/FridayFeatures/Shell/WorkspaceModel.swift) | Features | Guarda as sessões de terminal de cada projeto aberto, para trocar de projeto sem matar o que está rodando. |
+| [`WorkspaceModel.swift`](../Packages/FridayKit/Sources/FridayFeatures/Shell/WorkspaceModel.swift) | Features | Guarda as sessões de terminal de cada projeto aberto e a linha do tempo de cada sessão, para trocar de projeto sem perder nada. |
 | [`TerminalArea.swift`](../Packages/FridayKit/Sources/FridayFeatures/Terminal/TerminalArea.swift) | Features | Área de terminais de um projeto: abas das sessões, botões para abrir shell, Claude Code e Codex, e prévias. |
 | [`TerminalSessionView.swift`](../Packages/FridayKit/Sources/FridayFeatures/Terminal/TerminalSessionView.swift) | Features | Mostra um terminal de verdade (SwiftTerm) rodando a receita de uma sessão e avisa quando o processo termina. |
 | [`TerminalSessionsModel.swift`](../Packages/FridayKit/Sources/FridayFeatures/Terminal/TerminalSessionsModel.swift) | Features | Sessões de terminal abertas num projeto: abrir shell, Claude ou Codex, fechar, escolher a ativa e registrar o fim do processo. |
@@ -131,11 +144,12 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 | [`AgentEventDecoderTests.swift`](../Packages/FridayKit/Tests/FridayDomainTests/AgentEventDecoderTests.swift) | Teste | Testa a leitura de payloads reais do Claude Code (e de eventos desconhecidos) e a rejeição de mensagens inválidas. |
 | [`FixtureLoader.swift`](../Packages/FridayKit/Tests/FridayDomainTests/FixtureLoader.swift) | Teste | Lê os payloads de hook gravados em Tests/Fixtures para os testes de domínio. |
 | [`ProjectTests.swift`](../Packages/FridayKit/Tests/FridayDomainTests/ProjectTests.swift) | Teste | Prova as regras de caminho e nome de projeto. |
+| [`SessionActivityTests.swift`](../Packages/FridayKit/Tests/FridayDomainTests/SessionActivityTests.swift) | Teste | Prova que a fase da sessão, os arquivos alterados e as contagens saem certos de uma sequência de eventos. |
 | [`LocalProcessIntegrationTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/LocalProcessIntegrationTests.swift) | Teste | Integração com processo real curto no LocalProcess do SwiftTerm, sem view: a saída chega, a pasta é a certa e o término é detectado. |
 | [`ProjectsModelTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/ProjectsModelTests.swift) | Teste | Prova o cadastro de projetos na tela: normaliza caminho, recusa inválido e duplicado, espelha o banco. |
 | [`TerminalSessionsModelTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/TerminalSessionsModelTests.swift) | Teste | Prova o estado das sessões de terminal: abrir, numerar títulos, selecionar, fechar e registrar o fim do processo. |
 | [`WorkspaceModelTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/WorkspaceModelTests.swift) | Teste | Prova que cada projeto mantém as mesmas sessões de terminal ao ir e voltar. |
-| [`ClaudeSessionHooksTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/ClaudeSessionHooksTests.swift) | Teste | Testa que o plano do Claude ganha --settings e as variáveis do Friday, e que o settings gerado cobre os hooks sem tocar na config global. |
+| [`ClaudeSessionHooksTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/ClaudeSessionHooksTests.swift) | Teste | Prova que o Claude recebe --settings e o socket, que o comando final passa pelo shell intacto e que o settings cobre todos os hooks. |
 | [`DefaultLaunchPlannerTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/DefaultLaunchPlannerTests.swift) | Teste | Prova a receita de cada agente: executável, argumentos, ambiente limpo e pasta do projeto. |
 | [`FixtureLoader.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/FixtureLoader.swift) | Teste | Lê os payloads de hook gravados em Tests/Fixtures para os testes de domínio. |
 | [`GRDBAgentEventRepositoryTests.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/GRDBAgentEventRepositoryTests.swift) | Teste | Testa a gravação e a observação dos eventos dos agentes no banco em memória. |

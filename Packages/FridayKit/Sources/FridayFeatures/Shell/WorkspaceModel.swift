@@ -1,5 +1,5 @@
-// Resumo: Guarda as sessões de terminal de cada projeto aberto, para trocar de projeto sem matar o que está rodando.
-// Tags: terminal, interface
+// Resumo: Guarda as sessões de terminal de cada projeto aberto e a linha do tempo de cada sessão, para trocar de projeto sem perder nada.
+// Tags: terminal, linha-do-tempo, interface
 
 import FridayDomain
 import Observation
@@ -9,10 +9,21 @@ import Observation
 @Observable
 public final class WorkspaceModel {
     public private(set) var terminals: [Int64: TerminalSessionsModel] = [:]
+    private var timelines: [AgentSessionID: SessionTimelineModel] = [:]
     private let planner: any LaunchPlanning
+    private let events: any AgentEventRepository
 
-    public init(planner: any LaunchPlanning) {
+    public init(planner: any LaunchPlanning, events: any AgentEventRepository) {
         self.planner = planner
+        self.events = events
+    }
+
+    /// Linha do tempo da sessão; a mesma instância a cada chamada.
+    public func timeline(for session: AgentSessionID) -> SessionTimelineModel {
+        if let existing = timelines[session] { return existing }
+        let model = SessionTimelineModel(session: session, repository: events)
+        timelines[session] = model
+        return model
     }
 
     /// Sessões do projeto; cria o model na primeira chamada.

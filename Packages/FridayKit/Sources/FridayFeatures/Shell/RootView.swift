@@ -1,4 +1,4 @@
-// Resumo: Janela principal: barra lateral de projetos e, à direita, os terminais do projeto escolhido, com prévias de exemplo.
+// Resumo: Janela principal: projetos na lateral, terminais do projeto no centro e a linha do tempo da sessão no inspetor.
 // Tags: interface
 
 import FridayDomain
@@ -9,6 +9,7 @@ public struct RootView: View {
     @Environment(ProjectsModel.self) private var projects
     @Environment(WorkspaceModel.self) private var workspace
     @State private var selection: Project.ID?
+    @State private var showsTimeline = true
 
     public init() {}
 
@@ -35,6 +36,22 @@ public struct RootView: View {
             }
             .navigationTitle(selectedProject?.name ?? "Friday")
             .navigationSubtitle(selectedProject?.path ?? "")
+            .inspector(isPresented: $showsTimeline) {
+                Group {
+                    if let session = selectedSession {
+                        SessionTimelineView(model: workspace.timeline(for: session)).id(session)
+                    } else {
+                        ContentUnavailableView("Nenhuma sessão", systemImage: "list.bullet.rectangle", description: Text("Abra o Claude Code para acompanhar a sessão aqui."))
+                    }
+                }
+                .inspectorColumnWidth(min: 260, ideal: 300, max: 420)
+            }
+            .toolbar {
+                ToolbarItem {
+                    Button("Linha do tempo", systemImage: "sidebar.trailing") { showsTimeline.toggle() }
+                        .keyboardShortcut("0", modifiers: [.command, .option])
+                }
+            }
         }
         .task { await projects.observe() }
         .onChange(of: selection, initial: true) {
@@ -44,6 +61,11 @@ public struct RootView: View {
 
     private var selectedProject: Project? {
         projects.projects.first { $0.id == selection }
+    }
+
+    private var selectedSession: AgentSessionID? {
+        guard let id = selection ?? nil else { return nil }
+        return workspace.terminals[id]?.selection
     }
 }
 
@@ -64,14 +86,14 @@ private func previewModel(_ projects: [Project]) -> ProjectsModel {
             Project(name: "friday", path: "/Users/exemplo/Projetos/friday", kind: .git, addedAt: .now),
             Project(name: "anotacoes", path: "/Users/exemplo/Documentos/anotacoes", kind: .folder, addedAt: .now),
         ]))
-        .environment(WorkspaceModel(planner: DefaultLaunchPlanner()))
+        .environment(WorkspaceModel(planner: DefaultLaunchPlanner(), events: GRDBAgentEventRepository(database: try! AppDatabase.inMemory())))
         .frame(width: 900, height: 560)
 }
 
 #Preview("Vazio") {
     RootView()
         .environment(previewModel([]))
-        .environment(WorkspaceModel(planner: DefaultLaunchPlanner()))
+        .environment(WorkspaceModel(planner: DefaultLaunchPlanner(), events: GRDBAgentEventRepository(database: try! AppDatabase.inMemory())))
         .frame(width: 900, height: 560)
 }
 #endif
