@@ -33,7 +33,7 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 | [`FileChange.swift`](../Packages/FridayKit/Sources/FridayDomain/Files/FileChange.swift) | Domain | Uma mudança observada no disco (arquivo criado, alterado, apagado ou renomeado) entregue em lotes pelo vigia. |
 | [`FilesProtocols.swift`](../Packages/FridayKit/Sources/FridayDomain/Files/FilesProtocols.swift) | Domain | Contratos de quem lê pastas, quem lê o status do git e quem vigia mudanças, para features e testes não dependerem do disco. |
 | [`GitStatus.swift`](../Packages/FridayKit/Sources/FridayDomain/Files/GitStatus.swift) | Domain | Retrato do git de um projeto: branch, quanto está à frente ou atrás do remoto e cada arquivo alterado com seu tipo. |
-| [`GitChangePresentation.swift`](../Packages/FridayKit/Sources/FridayFeatures/Files/GitChangePresentation.swift) | Features | Como cada tipo de alteração do git aparece na tela: letra, texto para VoiceOver e cor do sistema. |
+| [`GitChangePresentation.swift`](../Packages/FridayKit/Sources/FridayFeatures/Files/GitChangePresentation.swift) | Features | Como cada tipo de alteração do git aparece na tela: letra, texto para VoiceOver e cor do tema. |
 | [`GitSummaryView.swift`](../Packages/FridayKit/Sources/FridayFeatures/Files/GitSummaryView.swift) | Features | Resumo do git do projeto: branch, quantos commits à frente ou atrás do remoto e quantos arquivos estão alterados. |
 | [`ProjectFilesModel.swift`](../Packages/FridayKit/Sources/FridayFeatures/Files/ProjectFilesModel.swift) | Features | Estado da árvore de arquivos e do git de um projeto: abre pastas sob demanda e se atualiza sozinho quando o disco muda. |
 | [`ProjectFilesView.swift`](../Packages/FridayKit/Sources/FridayFeatures/Files/ProjectFilesView.swift) | Features | Árvore de arquivos do projeto com pastas que abrem sob demanda e a marca de git (M, A, D, R, ?, U) ao lado de cada item. |
@@ -54,7 +54,18 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 
 | Arquivo | Camada | Resumo |
 |---|---|---|
-| [`GitChangePresentation.swift`](../Packages/FridayKit/Sources/FridayFeatures/Files/GitChangePresentation.swift) | Features | Como cada tipo de alteração do git aparece na tela: letra, texto para VoiceOver e cor do sistema. |
+| [`FridayButtonStyles.swift`](../Packages/FridayKit/Sources/FridayFeatures/Design/FridayButtonStyles.swift) | Features | Estilos de botão do Friday: o comum (superfície elevada com borda) e o principal (limão), um por tela. |
+| [`FridayFonts.swift`](../Packages/FridayKit/Sources/FridayFeatures/Design/FridayFonts.swift) | Features | Registra as fontes Geist e Geist Mono embarcadas no app e avisa se alguma falhar, caindo na fonte do sistema. |
+| [`FridayWordmark.swift`](../Packages/FridayKit/Sources/FridayFeatures/Design/FridayWordmark.swift) | Features | A marca do Friday: a palavra "friday" em Geist Mono seguida de um bloco limão parado, no formato de um cursor. |
+| [`MonoLabel.swift`](../Packages/FridayKit/Sources/FridayFeatures/Design/MonoLabel.swift) | Features | Rótulo em Geist Mono para metadado (caminho, atalho, contagem) e para título de seção em maiúsculas. |
+| [`Radius.swift`](../Packages/FridayKit/Sources/FridayFeatures/Design/Radius.swift) | Features | Raios de canto permitidos no Friday, um por tipo de elemento. |
+| [`Spacing.swift`](../Packages/FridayKit/Sources/FridayFeatures/Design/Spacing.swift) | Features | Escala de espaçamento de 4 em 4 pontos usada em todas as telas. |
+| [`Theme.swift`](../Packages/FridayKit/Sources/FridayFeatures/Design/Theme.swift) | Features | Cores prontas para uso nas views (fundos, textos, cores de vez e suas versões com opacidade); nenhuma view escreve hexadecimal. |
+| [`ThemeToken.swift`](../Packages/FridayKit/Sources/FridayFeatures/Design/ThemeToken.swift) | Features | Tabela de cores do Friday: cada token com o valor hexadecimal nas aparências escura e clara, única fonte de cor do app. |
+| [`TurnDot.swift`](../Packages/FridayKit/Sources/FridayFeatures/Design/TurnDot.swift) | Features | Ponto de 8 pt que mostra de quem é a vez, cheio (você, Claude) ou vazado (parado), sempre com rótulo para VoiceOver. |
+| [`TurnStyle.swift`](../Packages/FridayKit/Sources/FridayFeatures/Design/TurnStyle.swift) | Features | Como cada vez (sua, do Claude, parado) aparece na tela: cor, texto e se o ponto é cheio ou vazado. |
+| [`Typography.swift`](../Packages/FridayKit/Sources/FridayFeatures/Design/Typography.swift) | Features | Papéis tipográficos do Friday (Geist e Geist Mono) ligados ao tamanho de texto do usuário. |
+| [`GitChangePresentation.swift`](../Packages/FridayKit/Sources/FridayFeatures/Files/GitChangePresentation.swift) | Features | Como cada tipo de alteração do git aparece na tela: letra, texto para VoiceOver e cor do tema. |
 | [`GitSummaryView.swift`](../Packages/FridayKit/Sources/FridayFeatures/Files/GitSummaryView.swift) | Features | Resumo do git do projeto: branch, quantos commits à frente ou atrás do remoto e quantos arquivos estão alterados. |
 | [`ProjectFilesModel.swift`](../Packages/FridayKit/Sources/FridayFeatures/Files/ProjectFilesModel.swift) | Features | Estado da árvore de arquivos e do git de um projeto: abre pastas sob demanda e se atualiza sozinho quando o disco muda. |
 | [`ProjectFilesView.swift`](../Packages/FridayKit/Sources/FridayFeatures/Files/ProjectFilesView.swift) | Features | Árvore de arquivos do projeto com pastas que abrem sob demanda e a marca de git (M, A, D, R, ?, U) ao lado de cada item. |
@@ -181,6 +192,9 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 | [`FixtureLoader.swift`](../Packages/FridayKit/Tests/FridayDomainTests/FixtureLoader.swift) | Teste | Lê os payloads de hook gravados em Tests/Fixtures para os testes de domínio. |
 | [`ProjectTests.swift`](../Packages/FridayKit/Tests/FridayDomainTests/ProjectTests.swift) | Teste | Prova as regras de caminho e nome de projeto. |
 | [`SessionActivityTests.swift`](../Packages/FridayKit/Tests/FridayDomainTests/SessionActivityTests.swift) | Teste | Prova que a fase da sessão, os arquivos alterados e as contagens saem certos de uma sequência de eventos. |
+| [`ContrastTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/Design/ContrastTests.swift) | Teste | Calcula a razão de contraste WCAG dos pares de texto do guia visual e falha se algum ficar abaixo do valor anotado. |
+| [`FridayFontsTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/Design/FridayFontsTests.swift) | Teste | Prova que as fontes Geist e Geist Mono embarcadas são registradas e ficam disponíveis, e que cada papel tipográfico aponta para uma fonte existente. |
+| [`ThemeTokenTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/Design/ThemeTokenTests.swift) | Teste | Prova que todo token de cor tem as duas aparências, que os valores batem com o guia visual e que as opacidades das cores de vez estão certas. |
 | [`LocalProcessIntegrationTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/LocalProcessIntegrationTests.swift) | Teste | Integração com processo real curto no LocalProcess do SwiftTerm, sem view: a saída chega, a pasta é a certa e o término é detectado. |
 | [`ProjectFilesFlowTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/ProjectFilesFlowTests.swift) | Teste | Fluxo ponta a ponta sem tela: repositório git temporário, leitor, git e vigia reais; mexer no disco muda o que o modelo mostra. |
 | [`ProjectFilesModelTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/ProjectFilesModelTests.swift) | Teste | Prova a árvore de arquivos e o git na tela: abre pasta sob demanda, marca status e recarrega só o necessário quando o vigia avisa. |
@@ -207,3 +221,22 @@ Gerado por `swift scripts/mapa.swift` a partir do cabeçalho de cada arquivo. N�
 | [`TemporaryGitRepository.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/TemporaryGitRepository.swift) | Teste | Cria um repositório git descartável com identidade fictícia, para os testes nunca tocarem repositórios reais. |
 | [`TestTags.swift`](../Packages/FridayKit/Tests/FridayInfrastructureTests/TestTags.swift) | Teste | Tags de teste compartilhadas deste módulo, declaradas num lugar só para não colidir. |
 | [`mapa.swift`](../scripts/mapa.swift) | Script | Gera o docs/MAPA.md a partir dos cabeçalhos dos arquivos e confere resumo, tags e mapa atualizado. |
+
+## visual
+
+| Arquivo | Camada | Resumo |
+|---|---|---|
+| [`FridayButtonStyles.swift`](../Packages/FridayKit/Sources/FridayFeatures/Design/FridayButtonStyles.swift) | Features | Estilos de botão do Friday: o comum (superfície elevada com borda) e o principal (limão), um por tela. |
+| [`FridayFonts.swift`](../Packages/FridayKit/Sources/FridayFeatures/Design/FridayFonts.swift) | Features | Registra as fontes Geist e Geist Mono embarcadas no app e avisa se alguma falhar, caindo na fonte do sistema. |
+| [`FridayWordmark.swift`](../Packages/FridayKit/Sources/FridayFeatures/Design/FridayWordmark.swift) | Features | A marca do Friday: a palavra "friday" em Geist Mono seguida de um bloco limão parado, no formato de um cursor. |
+| [`MonoLabel.swift`](../Packages/FridayKit/Sources/FridayFeatures/Design/MonoLabel.swift) | Features | Rótulo em Geist Mono para metadado (caminho, atalho, contagem) e para título de seção em maiúsculas. |
+| [`Radius.swift`](../Packages/FridayKit/Sources/FridayFeatures/Design/Radius.swift) | Features | Raios de canto permitidos no Friday, um por tipo de elemento. |
+| [`Spacing.swift`](../Packages/FridayKit/Sources/FridayFeatures/Design/Spacing.swift) | Features | Escala de espaçamento de 4 em 4 pontos usada em todas as telas. |
+| [`Theme.swift`](../Packages/FridayKit/Sources/FridayFeatures/Design/Theme.swift) | Features | Cores prontas para uso nas views (fundos, textos, cores de vez e suas versões com opacidade); nenhuma view escreve hexadecimal. |
+| [`ThemeToken.swift`](../Packages/FridayKit/Sources/FridayFeatures/Design/ThemeToken.swift) | Features | Tabela de cores do Friday: cada token com o valor hexadecimal nas aparências escura e clara, única fonte de cor do app. |
+| [`TurnDot.swift`](../Packages/FridayKit/Sources/FridayFeatures/Design/TurnDot.swift) | Features | Ponto de 8 pt que mostra de quem é a vez, cheio (você, Claude) ou vazado (parado), sempre com rótulo para VoiceOver. |
+| [`TurnStyle.swift`](../Packages/FridayKit/Sources/FridayFeatures/Design/TurnStyle.swift) | Features | Como cada vez (sua, do Claude, parado) aparece na tela: cor, texto e se o ponto é cheio ou vazado. |
+| [`Typography.swift`](../Packages/FridayKit/Sources/FridayFeatures/Design/Typography.swift) | Features | Papéis tipográficos do Friday (Geist e Geist Mono) ligados ao tamanho de texto do usuário. |
+| [`ContrastTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/Design/ContrastTests.swift) | Teste | Calcula a razão de contraste WCAG dos pares de texto do guia visual e falha se algum ficar abaixo do valor anotado. |
+| [`FridayFontsTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/Design/FridayFontsTests.swift) | Teste | Prova que as fontes Geist e Geist Mono embarcadas são registradas e ficam disponíveis, e que cada papel tipográfico aponta para uma fonte existente. |
+| [`ThemeTokenTests.swift`](../Packages/FridayKit/Tests/FridayFeaturesTests/Design/ThemeTokenTests.swift) | Teste | Prova que todo token de cor tem as duas aparências, que os valores batem com o guia visual e que as opacidades das cores de vez estão certas. |

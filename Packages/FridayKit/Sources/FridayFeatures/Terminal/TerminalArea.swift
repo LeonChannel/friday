@@ -14,7 +14,7 @@ public struct TerminalArea: View {
     public var body: some View {
         VStack(spacing: 0) {
             tabBar
-            Divider()
+            Rectangle().fill(Theme.linha).frame(height: 1)
             ZStack {
                 ForEach(model.sessions) { session in
                     TerminalSessionView(session: session) { code in
@@ -24,14 +24,15 @@ public struct TerminalArea: View {
                     .allowsHitTesting(model.selection == session.id)
                 }
                 if model.sessions.isEmpty {
-                    ContentUnavailableView(
-                        "Nenhuma sessão aberta",
-                        systemImage: "terminal",
-                        description: Text("Abra um terminal, o Claude Code ou o Codex nesta pasta.")
-                    )
+                    Text("Nenhuma sessão aberta. Abra um terminal, o Claude Code ou o Codex nesta pasta.")
+                        .typography(.secundario)
+                        .foregroundStyle(Theme.textoSecundario)
+                        .multilineTextAlignment(.center)
+                        .padding(Spacing.xxl)
                 }
             }
         }
+        .background(Theme.fundo)
         .onAppear {
             Logger(subsystem: "com.leonchannel.friday", category: "terminal").info("Área de terminais montada para \(model.project.name, privacy: .public)")
         }
@@ -43,44 +44,69 @@ public struct TerminalArea: View {
     }
 
     private var tabBar: some View {
-        HStack {
-            Picker("Sessão", selection: $model.selection) {
-                ForEach(model.sessions) { session in
-                    Label(session.title, systemImage: symbol(for: session)).tag(Optional(session.id))
-                }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .disabled(model.sessions.isEmpty)
-
-            if let selected = model.selection {
-                Button("Fechar sessão", systemImage: "xmark") { model.close(id: selected) }
-                    .labelStyle(.iconOnly)
-                    .help("Fecha a sessão e encerra o processo")
+        HStack(spacing: Spacing.sm) {
+            ForEach(model.sessions) { session in
+                SessionTab(
+                    title: session.title,
+                    isSelected: model.selection == session.id,
+                    hasExited: isExited(session),
+                    select: { model.selection = session.id },
+                    close: { model.close(id: session.id) }
+                )
             }
 
             Spacer()
 
             ForEach(AgentKind.allCases, id: \.self) { agent in
-                Button(agent.displayName, systemImage: agent.symbolName) { model.open(agent: agent) }
+                Button(agent.displayName) { model.open(agent: agent) }
+                    .buttonStyle(.friday)
             }
         }
-        .padding(8)
+        .padding(.horizontal, Spacing.md)
+        .padding(.vertical, Spacing.sm)
+        .background(Theme.superficie)
     }
 
-    private func symbol(for session: TerminalSession) -> String {
-        if case .exited = session.state { return "stop.circle" }
-        return session.agent.symbolName
+    private func isExited(_ session: TerminalSession) -> Bool {
+        if case .exited = session.state { return true }
+        return false
     }
 }
 
-extension AgentKind {
-    var symbolName: String {
-        switch self {
-        case .shell: "terminal"
-        case .claude: "sparkles"
-        case .codex: "chevron.left.forwardslash.chevron.right"
+/// Aba de uma sessão: título, estado (encerrada é parado) e botão de fechar.
+private struct SessionTab: View {
+    let title: String
+    let isSelected: Bool
+    let hasExited: Bool
+    let select: () -> Void
+    let close: () -> Void
+
+    var body: some View {
+        HStack(spacing: Spacing.sm) {
+            Button(action: select) {
+                HStack(spacing: Spacing.sm) {
+                    if hasExited { TurnDot(.parado).accessibilityHidden(true) }
+                    Text(title)
+                        .typography(.secundario)
+                        .foregroundStyle(isSelected ? Theme.texto : Theme.textoSecundario)
+                }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(hasExited ? "\(title), encerrada" : title)
+            .accessibilityAddTraits(isSelected ? .isSelected : [])
+
+            if isSelected {
+                Button(action: close) {
+                    Text("×").typography(.metadado).foregroundStyle(Theme.textoSecundario)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Fechar sessão")
+                .help("Fecha a sessão e encerra o processo")
+            }
         }
+        .padding(.horizontal, Spacing.md)
+        .padding(.vertical, Spacing.xs + 2)
+        .background(isSelected ? Theme.superficieAtiva : .clear, in: .rect(cornerRadius: Radius.botao))
     }
 }
 
@@ -95,15 +121,29 @@ private func previewModel() -> TerminalSessionsModel {
     return model
 }
 
-#Preview("Com um terminal") {
-    TerminalArea(model: previewModel()).frame(width: 760, height: 460)
+#Preview("Com um terminal, escuro") {
+    TerminalArea(model: previewModel()).frame(width: 760, height: 460).preferredColorScheme(.dark)
 }
 
-#Preview("Vazio") {
+#Preview("Com um terminal, claro") {
+    TerminalArea(model: previewModel()).frame(width: 760, height: 460).preferredColorScheme(.light)
+}
+
+#Preview("Vazio, escuro") {
     TerminalArea(model: TerminalSessionsModel(
         project: Project(name: "tmp", path: NSTemporaryDirectory(), kind: .folder, addedAt: .now),
         planner: DefaultLaunchPlanner()
     ))
     .frame(width: 760, height: 460)
+    .preferredColorScheme(.dark)
+}
+
+#Preview("Vazio, claro") {
+    TerminalArea(model: TerminalSessionsModel(
+        project: Project(name: "tmp", path: NSTemporaryDirectory(), kind: .folder, addedAt: .now),
+        planner: DefaultLaunchPlanner()
+    ))
+    .frame(width: 760, height: 460)
+    .preferredColorScheme(.light)
 }
 #endif

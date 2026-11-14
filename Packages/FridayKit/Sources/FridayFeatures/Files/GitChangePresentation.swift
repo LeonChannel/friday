@@ -1,4 +1,4 @@
-// Resumo: Como cada tipo de alteração do git aparece na tela: letra, texto para VoiceOver e cor do sistema.
+// Resumo: Como cada tipo de alteração do git aparece na tela: letra, texto para VoiceOver e cor do tema.
 // Tags: git, interface
 
 import FridayDomain
@@ -29,12 +29,11 @@ extension GitChangeKind {
         }
     }
 
+    /// Só erro tem cor: apagado e conflito. O resto é neutro; a letra já diz o tipo.
     var tint: Color {
         switch self {
-        case .modified: .orange
-        case .added, .untracked: .green
-        case .deleted, .conflicted: .red
-        case .renamed: .blue
+        case .deleted, .conflicted: Theme.erro
+        case .modified, .added, .renamed, .untracked: Theme.textoSecundario
         }
     }
 }

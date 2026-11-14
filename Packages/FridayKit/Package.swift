@@ -20,7 +20,8 @@ let package = Package(
         ),
         .target(
             name: "FridayFeatures",
-            dependencies: ["FridayDomain", "FridayInfrastructure", .product(name: "SwiftTerm", package: "SwiftTerm")]
+            dependencies: ["FridayDomain", "FridayInfrastructure", .product(name: "SwiftTerm", package: "SwiftTerm")],
+            resources: [.copy("Resources/Fonts")]
         ),
         .testTarget(name: "FridayDomainTests", dependencies: ["FridayDomain"]),
         .testTarget(name: "FridayInfrastructureTests", dependencies: ["FridayInfrastructure"]),
