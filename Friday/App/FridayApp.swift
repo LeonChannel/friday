@@ -8,6 +8,7 @@ import SwiftUI
 @main
 struct FridayApp: App {
     @State private var projects: ProjectsModel
+    @State private var workspace = WorkspaceModel(planner: DefaultLaunchPlanner())
 
     init() {
         let database: AppDatabase
@@ -26,6 +27,7 @@ struct FridayApp: App {
         WindowGroup("Friday") {
             RootView()
                 .environment(projects)
+                .environment(workspace)
                 .frame(minWidth: 900, minHeight: 560)
         }
     }
