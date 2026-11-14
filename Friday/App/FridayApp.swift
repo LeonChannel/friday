@@ -1,6 +1,7 @@
 // Resumo: Ponto de entrada do app: abre o banco, liga o sensor de hooks e monta as dependências reais de cada funcionalidade.
 // Tags: composicao
 
+import FridayDomain
 import FridayFeatures
 import FridayInfrastructure
 import OSLog
@@ -10,6 +11,7 @@ import SwiftUI
 struct FridayApp: App {
     @State private var projects: ProjectsModel
     @State private var workspace: WorkspaceModel
+    @State private var settings = AppSettings()
     private let sensor: SensorService?
 
     init() {
@@ -22,11 +24,15 @@ struct FridayApp: App {
         let events = GRDBAgentEventRepository(database: database)
 
         // Sem sensor o terminal ainda funciona; só a linha do tempo fica vazia.
-        var hooks: ClaudeSessionHooks?
+        var hooks: (any AgentLaunchCustomizing)?
         var sensor: SensorService?
         do {
             let locations = try SensorLocations.live()
-            hooks = ClaudeSessionHooks(locations: locations)
+            hooks = CompositeLaunchCustomizer([
+                ClaudeSessionHooks(locations: locations),
+                // Codex só com a preferência ligada; lida a cada sessão nova.
+                CodexSessionHooks(locations: locations, isEnabled: AppSettings.codexTimelineReader()),
+            ])
             sensor = SensorService(server: HookSocketServer(socketPath: locations.socketPath), repository: events)
         } catch {
             Logger(subsystem: "com.leonchannel.friday", category: "sensor").error("Sensor desligado: \(error.localizedDescription, privacy: .public)")
@@ -52,6 +58,9 @@ struct FridayApp: App {
                 .environment(projects)
                 .environment(workspace)
                 .frame(minWidth: 1000, minHeight: 600)
+        }
+        Settings {
+            SettingsView(settings: settings)
         }
     }
 }

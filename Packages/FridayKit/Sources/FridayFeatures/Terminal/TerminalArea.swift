@@ -17,9 +17,11 @@ public struct TerminalArea: View {
             Rectangle().fill(Theme.linha).frame(height: 1)
             ZStack {
                 ForEach(model.sessions) { session in
-                    TerminalSessionView(session: session) { code in
+                    TerminalSessionView(session: session, onTitle: { title in
+                        model.setProgramTitle(id: session.id, title: title)
+                    }, onExit: { code in
                         model.markExited(id: session.id, code: code)
-                    }
+                    })
                     .opacity(model.selection == session.id ? 1 : 0)
                     .allowsHitTesting(model.selection == session.id)
                 }
@@ -47,7 +49,7 @@ public struct TerminalArea: View {
         HStack(spacing: Spacing.sm) {
             ForEach(model.sessions) { session in
                 SessionTab(
-                    title: session.title,
+                    title: session.displayTitle,
                     isSelected: model.selection == session.id,
                     hasExited: isExited(session),
                     select: { model.selection = session.id },

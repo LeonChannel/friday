@@ -21,6 +21,11 @@ public enum HookScript {
     exit 0
     """ + "\n"
 
+    /// Linha de comando do hook (`'<script>' <agente>`), com o caminho entre aspas de shell.
+    static func commandLine(script: URL, agent: String) -> String {
+        "'" + script.path.replacingOccurrences(of: "'", with: "'\\''") + "' " + agent
+    }
+
     /// Grava o script em `directory` (0700, executável) e devolve o caminho. Reescreve só se o conteúdo mudou.
     @discardableResult
     public static func install(in directory: URL, fileManager: FileManager = .default) throws -> URL {

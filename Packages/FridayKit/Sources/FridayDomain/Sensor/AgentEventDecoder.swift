@@ -30,15 +30,26 @@ public enum AgentEventDecoder {
             throw AgentEventDecodingError.payloadIsNotJSONObject
         }
         let input = object["tool_input"] as? [String: Any]
+        let kind = AgentEventKind(hookName: object["hook_event_name"] as? String ?? "")
+        let subagent = kind == .subagentStop ? subagentIdentity(from: object) : nil
         return AgentEvent(
             sessionID: AgentSessionID(uuid),
             agent: agent,
-            kind: AgentEventKind(hookName: object["hook_event_name"] as? String ?? ""),
+            kind: kind,
             occurredAt: receivedAt,
-            toolName: object["tool_name"] as? String,
-            target: target(from: input),
+            toolName: subagent?.type ?? object["tool_name"] as? String,
+            target: subagent?.description ?? target(from: input),
             rawJSON: String(decoding: body, as: UTF8.self)
         )
+    }
+
+    /// Tipo (`agent_type`) e descrição do subagente; a descrição vem da tarefa de fundo com o mesmo `agent_id`.
+    private static func subagentIdentity(from object: [String: Any]) -> (type: String?, description: String?) {
+        let type = (object["agent_type"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+        let id = object["agent_id"] as? String
+        let tasks = object["background_tasks"] as? [[String: Any]] ?? []
+        let description = tasks.first { id != nil && $0["id"] as? String == id }?["description"] as? String
+        return (type, description.flatMap { $0.isEmpty ? nil : String($0.prefix(maxTargetLength)) })
     }
 
     private static func target(from input: [String: Any]?) -> String? {

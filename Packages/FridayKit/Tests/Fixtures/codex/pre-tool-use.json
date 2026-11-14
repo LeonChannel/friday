@@ -1,0 +1,14 @@
+{
+  "session_id": "11111111-2222-7333-8444-555555555555",
+  "turn_id": "11111111-2222-7333-8444-666666666666",
+  "transcript_path": null,
+  "cwd": "/Users/exemplo/projeto",
+  "hook_event_name": "PreToolUse",
+  "model": "gpt-6.1-sol",
+  "permission_mode": "bypassPermissions",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "echo oi"
+  },
+  "tool_use_id": "exec-77777777-8888-4999-8aaa-bbbbbbbbbbbb"
+}

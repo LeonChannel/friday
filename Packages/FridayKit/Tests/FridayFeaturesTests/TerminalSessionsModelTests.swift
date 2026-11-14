@@ -35,6 +35,31 @@ struct TerminalSessionsModelTests {
         #expect(model.sessions.map(\.title) == ["Terminal", "Terminal 2", "Claude Code"])
     }
 
+    @Test func tabShowsProgramTitleAndFallsBackToAgentName() throws {
+        let model = TerminalSessionsModel(project: project, planner: FakePlanner())
+        let first = try #require(model.open(agent: .shell))
+        let second = try #require(model.open(agent: .shell))
+        #expect(model.sessions.map(\.displayTitle) == ["Terminal", "Terminal 2"])
+
+        model.setProgramTitle(id: first.id, title: "  vim notas.md ")
+        #expect(model.sessions.map(\.displayTitle) == ["vim notas.md", "Terminal 2"])
+
+        model.setProgramTitle(id: first.id, title: "   ")
+        #expect(model.sessions.map(\.displayTitle) == ["Terminal", "Terminal 2"])
+
+        model.setProgramTitle(id: second.id, title: "htop")
+        #expect(model.sessions.map(\.title) == ["Terminal", "Terminal 2"])
+    }
+
+    @Test func programTitleDoesNotBreakNumberingOfNewTabs() throws {
+        let model = TerminalSessionsModel(project: project, planner: FakePlanner())
+        let first = try #require(model.open(agent: .claude))
+        model.setProgramTitle(id: first.id, title: "Trabalhando no bug")
+        let second = try #require(model.open(agent: .claude))
+        #expect(second.title == "Claude Code 2")
+        #expect(second.displayTitle == "Claude Code 2")
+    }
+
     @Test func markExitedKeepsTabWithCode() throws {
         let model = TerminalSessionsModel(project: project, planner: FakePlanner())
         let session = try #require(model.open(agent: .shell))

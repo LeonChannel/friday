@@ -1,0 +1,9 @@
+{
+  "session_id": "11111111-2222-7333-8444-555555555555",
+  "transcript_path": null,
+  "cwd": "/Users/exemplo/projeto",
+  "hook_event_name": "SessionStart",
+  "model": "gpt-6.1-sol",
+  "permission_mode": "bypassPermissions",
+  "source": "startup"
+}

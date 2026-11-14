@@ -1,0 +1,26 @@
+{
+  "session_id": "11111111-2222-4333-8444-555555555555",
+  "transcript_path": "/Users/exemplo/.claude/projects/-Users-exemplo-projeto/11111111-2222-4333-8444-555555555555.jsonl",
+  "cwd": "/Users/exemplo/projeto",
+  "prompt_id": "11111111-2222-4333-8444-777777777777",
+  "permission_mode": "bypassPermissions",
+  "agent_id": "a0123456789abcdef",
+  "agent_type": "general-purpose",
+  "effort": {
+    "level": "medium"
+  },
+  "hook_event_name": "SubagentStop",
+  "stop_hook_active": false,
+  "agent_transcript_path": "/Users/exemplo/.claude/projects/-Users-exemplo-projeto/11111111-2222-4333-8444-555555555555/subagents/agent-a0123456789abcdef.jsonl",
+  "last_assistant_message": "oi",
+  "background_tasks": [
+    {
+      "id": "a0123456789abcdef",
+      "type": "subagent",
+      "status": "running",
+      "description": "Dizer oi",
+      "agent_type": "general-purpose"
+    }
+  ],
+  "session_crons": []
+}

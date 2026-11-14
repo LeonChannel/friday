@@ -38,7 +38,7 @@ public struct SessionActivity: Equatable, Sendable {
         var prompts = 0
         for event in ordered {
             switch event.kind {
-            case .sessionStart, .stop, .notification:
+            case .sessionStart, .stop, .notification, .permissionRequest:
                 phase = .waitingForYou
             case .userPromptSubmit:
                 phase = .working
