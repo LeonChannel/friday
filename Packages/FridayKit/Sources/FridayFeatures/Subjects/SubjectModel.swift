@@ -36,4 +36,23 @@ public final class SubjectModel {
             loadError = error.localizedDescription
         }
     }
+
+    /// Perguntas abertas que esperam o dev.
+    public var questionsForYou: [Question] {
+        subject?.questions.filter { $0.isOpen && $0.waitsForYou } ?? []
+    }
+
+    /// Responde uma pergunta escolhendo uma opção; vira decisão registrada no assunto.
+    public func answer(_ question: Question, with option: QuestionOption) throws {
+        _ = try repository.update(id: id) { subject in
+            _ = try subject.recordDecision(
+                text: option.label, reason: option.consequence, answering: question.id, at: Date()
+            )
+        }
+    }
+
+    /// Liga o assunto a um projeto (é nele que os terminais do assunto abrem).
+    public func link(projectID: Int64?) throws {
+        _ = try repository.update(id: id) { subject in subject.projectID = projectID }
+    }
 }

@@ -11,7 +11,7 @@ struct WorkspaceModelTests {
     private let planner = StubPlanner()
 
     @Test func returnsSameModelForSameProject() throws {
-        let workspace = WorkspaceModel(planner: planner, events: NoEvents()) { project in ProjectFilesModel(rootPath: project.path, folderReader: EmptyFolders(), gitReader: NoGit(), watcher: SilentWatcher()) }
+        let workspace = WorkspaceModel(planner: planner, events: NoEvents(), subjects: NoSubjects()) { project in ProjectFilesModel(rootPath: project.path, folderReader: EmptyFolders(), gitReader: NoGit(), watcher: SilentWatcher()) }
         let project = Project(id: 1, name: "a", path: "/tmp/a", kind: .folder, addedAt: .distantPast)
 
         let first = try #require(workspace.terminals(for: project))
@@ -21,7 +21,7 @@ struct WorkspaceModelTests {
     }
 
     @Test func unsavedProjectHasNoTerminals() {
-        let workspace = WorkspaceModel(planner: planner, events: NoEvents()) { project in ProjectFilesModel(rootPath: project.path, folderReader: EmptyFolders(), gitReader: NoGit(), watcher: SilentWatcher()) }
+        let workspace = WorkspaceModel(planner: planner, events: NoEvents(), subjects: NoSubjects()) { project in ProjectFilesModel(rootPath: project.path, folderReader: EmptyFolders(), gitReader: NoGit(), watcher: SilentWatcher()) }
         #expect(workspace.terminals(for: Project(name: "x", path: "/tmp/x", kind: .folder, addedAt: .distantPast)) == nil)
     }
 }
@@ -48,4 +48,14 @@ private struct NoGit: GitStatusReading {
 
 private struct SilentWatcher: ChangeWatching {
     func changes(inFolderAt path: String) async -> AsyncStream<[FileChange]> { AsyncStream { $0.finish() } }
+}
+
+private struct NoSubjects: SubjectRepository {
+    func observeAll() -> AsyncThrowingStream<[Subject], any Error> { AsyncThrowingStream { $0.finish() } }
+    func observe(id: Int64) -> AsyncThrowingStream<Subject?, any Error> { AsyncThrowingStream { $0.finish() } }
+    func all() throws -> [Subject] { [] }
+    func subject(id: Int64) throws -> Subject? { nil }
+    func insert(_ subject: Subject) throws -> Subject { subject }
+    func update(id: Int64, _ change: @Sendable (inout Subject) throws -> Void) throws -> Subject { throw CancellationError() }
+    func delete(id: Int64) throws {}
 }

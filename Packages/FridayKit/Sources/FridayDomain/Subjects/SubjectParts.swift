@@ -85,6 +85,11 @@ public enum FrontState: String, Codable, Sendable, CaseIterable {
 public struct FrontStep: Codable, Equatable, Sendable {
     public var text: String
     public var isDone: Bool
+
+    public init(text: String, isDone: Bool) {
+        self.text = text
+        self.isDone = isDone
+    }
 }
 
 /// Trabalho em andamento (pesquisa ou execução) com passos e critério de conclusão.

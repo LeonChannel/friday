@@ -8,22 +8,22 @@ import SwiftUI
 /// Abas de sessões com o terminal da selecionada. Todas as sessões ficam montadas para o processo sobreviver à troca de aba.
 public struct TerminalArea: View {
     @Bindable var model: TerminalSessionsModel
+    /// Variáveis extras das sessões abertas aqui (ex.: `FRIDAY_ASSUNTO` quando a área é a gaveta de um assunto).
+    let sessionEnvironment: [String: String]
 
-    public init(model: TerminalSessionsModel) { self.model = model }
+    public init(model: TerminalSessionsModel, sessionEnvironment: [String: String] = [:]) {
+        self.model = model
+        self.sessionEnvironment = sessionEnvironment
+    }
 
     public var body: some View {
         VStack(spacing: 0) {
             tabBar
             Rectangle().fill(Theme.linha).frame(height: 1)
             ZStack {
-                ForEach(model.sessions) { session in
-                    TerminalSessionView(session: session, onTitle: { title in
-                        model.setProgramTitle(id: session.id, title: title)
-                    }, onExit: { code in
-                        model.markExited(id: session.id, code: code)
-                    })
-                    .opacity(model.selection == session.id ? 1 : 0)
-                    .allowsHitTesting(model.selection == session.id)
+                // Só a sessão escolhida fica na tela; as outras seguem rodando no registro do model.
+                if let session = model.sessions.first(where: { $0.id == model.selection }) {
+                    TerminalSessionView(session: session, model: model).id(session.id)
                 }
                 if model.sessions.isEmpty {
                     Text("Nenhuma sessão aberta. Abra um terminal, o Claude Code ou o Codex nesta pasta.")
@@ -60,7 +60,7 @@ public struct TerminalArea: View {
             Spacer()
 
             ForEach(AgentKind.allCases, id: \.self) { agent in
-                Button(agent.displayName) { model.open(agent: agent) }
+                Button(agent.displayName) { model.open(agent: agent, environment: sessionEnvironment) }
                     .buttonStyle(.friday)
             }
         }

@@ -1,4 +1,4 @@
-// Resumo: Mostra um terminal de verdade (SwiftTerm) rodando a receita de uma sessão e avisa quando o processo termina.
+// Resumo: Mostra na tela o terminal de verdade (SwiftTerm) de uma sessão e encerra processos com SIGTERM e, se preciso, SIGKILL.
 // Tags: terminal, interface
 
 import AppKit
@@ -6,33 +6,21 @@ import FridayDomain
 import SwiftTerm
 import SwiftUI
 
-/// Terminal embutido de uma sessão. Sair da tela encerra o processo, então só feche a aba (e não esconda a view) para matar.
+/// Mostra o terminal de uma sessão. A view vem do registro do model, então sair da tela não encerra o processo.
 struct TerminalSessionView: NSViewRepresentable {
     let session: TerminalSession
-    let onTitle: @MainActor (String) -> Void
-    let onExit: @MainActor (Int32?) -> Void
+    let model: TerminalSessionsModel
     @Environment(\.colorScheme) private var colorScheme
 
-    func makeCoordinator() -> Coordinator { Coordinator(onTitle: onTitle, onExit: onExit) }
-
     func makeNSView(context: Context) -> LocalProcessTerminalView {
-        let view = LocalProcessTerminalView(frame: .zero)
-        view.font = Typography.terminalFont()
+        let view = model.terminalView(for: session)
+        // A mesma view pode ter estado em outra tela; ela só pode ter um pai.
+        view.removeFromSuperview()
         applyTheme(to: view)
-        view.processDelegate = context.coordinator
-        let plan = session.plan
-        view.startProcess(
-            executable: plan.executable,
-            args: plan.arguments,
-            environment: plan.environment.map { "\($0.key)=\($0.value)" },
-            currentDirectory: plan.workingDirectory
-        )
         return view
     }
 
     func updateNSView(_ view: LocalProcessTerminalView, context: Context) {
-        context.coordinator.onTitle = onTitle
-        context.coordinator.onExit = onExit
         applyTheme(to: view)
     }
 
@@ -43,28 +31,6 @@ struct TerminalSessionView: NSViewRepresentable {
         view.nativeForegroundColor = NSColor(hex: ThemeToken.texto.hex(appearance))
         view.caretColor = NSColor(hex: ThemeToken.voce.hex(appearance))
         view.caretTextColor = NSColor(hex: ThemeToken.textoSobreVoce.hex(appearance))
-    }
-
-    static func dismantleNSView(_ view: LocalProcessTerminalView, coordinator: Coordinator) {
-        coordinator.onTitle = { _ in }
-        coordinator.onExit = { _ in }
-        TerminalProcessKiller.terminate(view.process)
-    }
-
-    @MainActor
-    final class Coordinator: NSObject, LocalProcessTerminalViewDelegate {
-        var onTitle: @MainActor (String) -> Void
-        var onExit: @MainActor (Int32?) -> Void
-
-        init(onTitle: @escaping @MainActor (String) -> Void, onExit: @escaping @MainActor (Int32?) -> Void) {
-            self.onTitle = onTitle
-            self.onExit = onExit
-        }
-
-        func sizeChanged(source: LocalProcessTerminalView, newCols: Int, newRows: Int) {}
-        func setTerminalTitle(source: LocalProcessTerminalView, title: String) { onTitle(title) }
-        func hostCurrentDirectoryUpdate(source: TerminalView, directory: String?) {}
-        func processTerminated(source: TerminalView, exitCode: Int32?) { onExit(exitCode) }
     }
 }
 

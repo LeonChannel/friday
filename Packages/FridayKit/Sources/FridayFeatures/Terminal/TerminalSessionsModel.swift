@@ -4,6 +4,7 @@
 import FridayDomain
 import Foundation
 import Observation
+import SwiftTerm
 
 /// Situação do processo de uma sessão.
 public enum TerminalSessionState: Equatable, Sendable {
@@ -40,6 +41,7 @@ public final class TerminalSessionsModel {
     public private(set) var openError: String?
 
     public let project: Project
+    @ObservationIgnored private let views = TerminalViewRegistry()
     private let planner: any LaunchPlanning
     private let makeSessionID: @Sendable () -> AgentSessionID
 
@@ -51,10 +53,11 @@ public final class TerminalSessionsModel {
 
     /// Abre uma sessão nova do programa, na pasta do projeto, e a deixa selecionada.
     @discardableResult
-    public func open(agent: AgentKind) -> TerminalSession? {
+    public func open(agent: AgentKind, environment extra: [String: String] = [:]) -> TerminalSession? {
         let id = makeSessionID()
         do {
-            let plan = try planner.plan(agent: agent, project: project, session: id)
+            var plan = try planner.plan(agent: agent, project: project, session: id)
+            plan.environment.merge(extra) { _, new in new }
             let session = TerminalSession(id: id, agent: agent, title: title(for: agent), plan: plan, state: .running)
             sessions.append(session)
             selection = id
@@ -69,6 +72,7 @@ public final class TerminalSessionsModel {
     /// Remove a sessão da lista; a view que a mostra encerra o processo ao sair da tela.
     public func close(id: AgentSessionID) {
         guard let index = sessions.firstIndex(where: { $0.id == id }) else { return }
+        views.close(id)
         sessions.remove(at: index)
         if selection == id {
             selection = sessions.isEmpty ? nil : sessions[min(index, sessions.count - 1)].id
@@ -93,5 +97,14 @@ public final class TerminalSessionsModel {
     private func title(for agent: AgentKind) -> String {
         let sameKind = sessions.filter { $0.agent == agent }.count
         return sameKind == 0 ? agent.displayName : "\(agent.displayName) \(sameKind + 1)"
+    }
+
+    /// View viva do terminal da sessão (criada e iniciada na primeira vez).
+    func terminalView(for session: TerminalSession) -> LocalProcessTerminalView {
+        views.view(for: session, onTitle: { [weak self] title in
+            self?.setProgramTitle(id: session.id, title: title)
+        }, onExit: { [weak self] code in
+            self?.markExited(id: session.id, code: code)
+        })
     }
 }

@@ -10,6 +10,7 @@ import SwiftUI
 struct FridayApp: App {
     @State private var projects: ProjectsModel
     @State private var workspace: WorkspaceModel
+    @State private var subjects: SubjectsModel
     @State private var settings = AppSettings()
     private let sensor: SensorService?
 
@@ -47,7 +48,9 @@ struct FridayApp: App {
         }
 
         _projects = State(initialValue: ProjectsModel(repository: GRDBProjectRepository(database: database), inspector: LocalFolderInspector()))
-        _workspace = State(initialValue: WorkspaceModel(planner: DefaultLaunchPlanner(customizer: hooks), events: events) { project in
+        let subjectRepository = GRDBSubjectRepository(database: database)
+        _subjects = State(initialValue: SubjectsModel(repository: subjectRepository))
+        _workspace = State(initialValue: WorkspaceModel(planner: DefaultLaunchPlanner(customizer: hooks), events: events, subjects: subjectRepository) { project in
             ProjectFilesModel(rootPath: project.path, folderReader: LocalFolderReader(), gitReader: GitStatusReader(), watcher: FolderChangeWatcher())
         })
     }
@@ -57,6 +60,7 @@ struct FridayApp: App {
             RootView()
                 .environment(projects)
                 .environment(workspace)
+                .environment(subjects)
                 .frame(minWidth: 1000, minHeight: 600)
         }
         Settings {

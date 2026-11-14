@@ -7,6 +7,10 @@ description: Registra no Friday o estado de um assunto (evidência, pergunta, de
 
 O Friday guarda o **estado** do assunto, não a conversa. Escreva nele em frases curtas; o dev lê o resumo, não o que você disse no chat.
 
+## Qual assunto
+
+Se a variável `FRIDAY_ASSUNTO` existir, a sessão foi aberta de dentro desse assunto no Friday: use esse número sem perguntar. Sem ela, pergunte ao dev ou rode `friday assunto listar`.
+
 ## Comece lendo
 
 `friday assunto ler <id>` traz tudo em markdown compacto. `friday assunto listar` mostra os assuntos e de quem é a vez. Leia antes de escrever, para não repetir.
