@@ -81,7 +81,6 @@ struct LocalProcessIntegrationTests {
     }
 }
 
-extension Tag { @Tag static var integration: Self }
 
 private struct TimedOut: Error {}
 

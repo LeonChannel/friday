@@ -64,7 +64,3 @@ struct GitStatusReaderTests {
         #expect(try await reader.status(forFolderAt: temp.url.path) == nil)
     }
 }
-
-extension Tag {
-    @Tag static var integration: Self
-}

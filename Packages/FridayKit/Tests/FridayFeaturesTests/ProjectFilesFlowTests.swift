@@ -45,9 +45,6 @@ struct ProjectFilesFlowTests {
     }
 }
 
-extension Tag {
-    @Tag static var integration: Self
-}
 
 private struct FlowTimedOut: Error {}
 
