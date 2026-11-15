@@ -58,48 +58,8 @@ public struct GRDBSubjectRepository: SubjectRepository {
         _ = try database.writer.write { db in try SubjectRecord.deleteOne(db, key: id) }
     }
 
-    /// Junta a observação do GRDB (escritas deste processo) com o aviso do sistema (escritas de outro processo).
     private func stream<Value: Sendable & Equatable>(fetch: @escaping @Sendable (Database) throws -> Value) -> AsyncThrowingStream<Value, any Error> {
-        let writer = database.writer
-        let local = ValueObservation.tracking(fetch).values(in: writer)
-        return AsyncThrowingStream { continuation in
-            // O aviso entre processos é global: qualquer gravação de qualquer `friday` relê, então valor repetido não é repassado.
-            let last = LastEmitted<Value>()
-            let localTask = Task {
-                do {
-                    for try await value in local where await last.isNew(value) { continuation.yield(value) }
-                    continuation.finish()
-                } catch {
-                    continuation.finish(throwing: error)
-                }
-            }
-            let remoteTask = Task {
-                for await _ in SubjectChangeSignal.changes() {
-                    do {
-                        let value = try await writer.read(fetch)
-                        if await last.isNew(value) { continuation.yield(value) }
-                    } catch {
-                        continuation.finish(throwing: error)
-                    }
-                }
-            }
-            continuation.onTermination = { _ in
-                localTask.cancel()
-                remoteTask.cancel()
-            }
-        }
-    }
-}
-
-/// Último valor entregue por um stream, compartilhado pelas duas fontes (banco local e aviso entre processos).
-private actor LastEmitted<Value: Equatable & Sendable> {
-    private var last: Value?
-
-    /// `true` e guarda o valor quando ele difere do último entregue.
-    func isNew(_ value: Value) -> Bool {
-        guard value != last else { return false }
-        last = value
-        return true
+        DatabaseLiveStream.values(in: database.writer, fetch: fetch)
     }
 }
 
@@ -116,6 +76,7 @@ private struct SubjectRecord: Codable, FetchableRecord, MutablePersistableRecord
     var partsJSON: String
     var turn: String
     var turnReason: String
+    var activity: String?
 
     private struct Parts: Codable {
         var questions: [Question]
@@ -123,6 +84,27 @@ private struct SubjectRecord: Codable, FetchableRecord, MutablePersistableRecord
         var alternatives: [Alternative]
         var decisions: [Decision]
         var fronts: [Front]
+        var stages: [Stage]
+
+        init(questions: [Question], evidences: [Evidence], alternatives: [Alternative], decisions: [Decision], fronts: [Front], stages: [Stage]) {
+            self.questions = questions
+            self.evidences = evidences
+            self.alternatives = alternatives
+            self.decisions = decisions
+            self.fronts = fronts
+            self.stages = stages
+        }
+
+        // Assunto gravado antes das jornadas não tem `stages` no JSON.
+        init(from decoder: any Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            questions = try c.decode([Question].self, forKey: .questions)
+            evidences = try c.decode([Evidence].self, forKey: .evidences)
+            alternatives = try c.decode([Alternative].self, forKey: .alternatives)
+            decisions = try c.decode([Decision].self, forKey: .decisions)
+            fronts = try c.decode([Front].self, forKey: .fronts)
+            stages = try c.decodeIfPresent([Stage].self, forKey: .stages) ?? []
+        }
     }
 
     private static var encoder: JSONEncoder {
@@ -147,8 +129,9 @@ private struct SubjectRecord: Codable, FetchableRecord, MutablePersistableRecord
         intent = subject.intent
         let parts = Parts(
             questions: subject.questions, evidences: subject.evidences, alternatives: subject.alternatives,
-            decisions: subject.decisions, fronts: subject.fronts
+            decisions: subject.decisions, fronts: subject.fronts, stages: subject.stages
         )
+        activity = subject.activity?.rawValue
         partsJSON = String(decoding: try Self.encoder.encode(parts), as: UTF8.self)
         let turn = subject.turn
         self.turn = turn.holder.rawValue
@@ -160,7 +143,8 @@ private struct SubjectRecord: Codable, FetchableRecord, MutablePersistableRecord
         return Subject(
             id: id, title: title, projectID: projectID, intent: intent, createdAt: createdAt, updatedAt: updatedAt,
             questions: parts.questions, evidences: parts.evidences, alternatives: parts.alternatives,
-            decisions: parts.decisions, fronts: parts.fronts
+            decisions: parts.decisions, fronts: parts.fronts,
+            activity: activity.flatMap(ActivityKind.init(rawValue:)), stages: parts.stages
         )
     }
 

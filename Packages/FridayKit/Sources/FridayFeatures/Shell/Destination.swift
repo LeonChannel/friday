@@ -1,19 +1,28 @@
-// Resumo: Para onde a janela está olhando dentro do projeto aberto (Mesa, Sua vez, um assunto ou um repositório) e como isso é lembrado.
-// Tags: interface
+// Resumo: Para onde a janela está olhando dentro do projeto aberto (Mesa, Sua vez, Memória, Backlog, Bugs, um assunto ou um repositório) e como isso é lembrado.
+// Tags: interface, memoria, backlog
 
 /// Destino escolhido na lateral.
 public enum Destination: Hashable, Sendable {
     case desk
     case yourTurn
+    /// A memória do projeto (o vault).
+    case memory
+    /// A árvore de épicos, histórias e tasks do projeto.
+    case backlog
+    /// O quadro de bugs do projeto.
+    case bugs
     case subject(Int64)
     /// Uma pasta do projeto com terminal e arquivos: a raiz ou um dos repositórios, pelo caminho.
     case folder(String)
 
-    /// Texto curto para guardar a escolha (`mesa`, `sua-vez`, `assunto:3`, `pasta:/caminho`).
+    /// Texto curto para guardar a escolha (`mesa`, `sua-vez`, `memoria`, `backlog`, `bugs`, `assunto:3`, `pasta:/caminho`).
     public var storageKey: String {
         switch self {
         case .desk: "mesa"
         case .yourTurn: "sua-vez"
+        case .memory: "memoria"
+        case .backlog: "backlog"
+        case .bugs: "bugs"
         case .subject(let id): "assunto:\(id)"
         case .folder(let path): "pasta:\(path)"
         }
@@ -24,6 +33,9 @@ public enum Destination: Hashable, Sendable {
         switch storageKey {
         case "mesa": self = .desk
         case "sua-vez": self = .yourTurn
+        case "memoria": self = .memory
+        case "backlog": self = .backlog
+        case "bugs": self = .bugs
         default:
             let parts = storageKey.split(separator: ":", maxSplits: 1)
             guard parts.count == 2, !parts[1].isEmpty else { return nil }

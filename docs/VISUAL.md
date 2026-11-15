@@ -12,16 +12,23 @@ Quando este guia não cobrir um caso, vale o [Human Interface Guidelines](https:
 ## Estrutura da janela
 
 - A janela é uma `NavigationSplitView` com duas colunas: **lateral** à esquerda e **área de trabalho** à direita. Os botões de fechar, minimizar e zoom são os do sistema.
-- A **lateral** tem a marca, as entradas fixas (Mesa, Sua vez), os assuntos, os projetos e, no rodapé, a legenda das três vezes. Cada assunto é um ponto da cor da vez seguido do nome. Nada de ícone por assunto.
+- A **lateral** tem a marca, as entradas fixas (Mesa, Sua vez, Memória, Backlog, Bugs), os assuntos, os repositórios e, no rodapé, a **cota** do Claude. Os repositórios começam recolhidos (título com a contagem e um chevron); recolhidos, só o repositório aberto aparece. A escolha fica guardada. Cada repositório mostra o nome e, embaixo, a branch em mono.
+- A vez de cada assunto na lateral tem o texto na dica (`help`) do item, já que o rodapé não tem mais legenda.
+- **Cota** no rodapé: janela de 5 horas e de 7 dias, cada uma com a porcentagem, uma barra de 3 pt (número medido: trilho `superficieAtiva`, preenchimento `texto`) e "renova em …"; no topo, há quanto tempo foi lida. Sem leitura ainda, uma frase dizendo quando ela aparece.
+- A lista da lateral **esmaece** nos últimos 44 pt antes da cota, numa curva suave (não linear), como a borda da coroa do relógio. Não há movimento nem escala: `scrollTransition` dentro da `List` do macOS deslocava linhas que não estavam na borda. O fim da lista tem uma folga da mesma altura, para o último item subir e ser lido inteiro. Cada assunto é um ponto da cor da vez seguido do nome. Nada de ícone por assunto.
 - A **barra superior** é a toolbar do sistema com conteúdo e fundo do tema: o caminho (`projeto / assunto`) à esquerda, a troca de visão (Mapa, Dossiê) no centro e o indicador de vez à direita.
+- **O assunto é uma lousa, não um terminal.** O Claude trabalha no bastidor; o dev acompanha pelo estado gravado. Assunto com tipo de atividade mostra, logo abaixo da barra, a **lousa de etapas**: uma coluna por etapa da jornada, com número, nome, estado e a nota do que saiu dela. Rodando: fundo `claude` a 10% e borda coral. Esperando você: fundo `voce` a 8% e borda limão. Concluída: neutra. Pendente: borda tracejada. O rótulo da seção diz "Erro · 1 de 4 etapas". Nada anima. Se a sessão do Claude do assunto não está rodando, a barra mostra "Chamar o Claude" (botão comum).
 - Um assunto aberto tem três regiões fixas:
   - **Onde você parou**: coluna à esquerda do mapa com as cinco linhas (Objetivo, Confirmado, Em aberto, Sua vez, Depois). Pode ser recolhida.
   - **Mapa**: a superfície principal, ocupando o resto.
   - **Trilhas**: faixa embaixo, uma linha por frente; o terminal abre como gaveta dela.
-- **Mesa** (tela inicial): a pergunta "O que está te incomodando?" no topo, como barra de comando, e os assuntos em três colunas por vez: Sua vez, Com o Claude, Parados.
+- **Mesa** (tela inicial): no topo, o **tipo de atividade** (Erro, Teste, Tarefa, Marco, Dúvida, controle segmentado neutro, ⌘1–⌘5) e, embaixo, a barra de comando cuja pergunta muda com o tipo ("O que quebrou?"). Sem tipo, a barra fica desligada: começar é escolher o tipo. Uma linha em metadado diz o que a jornada daquele tipo vai fazer (etapas, skills) ou que ela está vazia. "Começar" grava o assunto e já chama o Claude no bastidor. Abaixo, os assuntos em três colunas por vez: Sua vez, Com o Claude, Parados.
+- **Bugs**: quadro em colunas (Novo, A fazer, Fazendo, Revisão, Feito), rolando na horizontal, com a barra "Anotar um bug para depois…" no topo. "Novo" é a triagem do que o Claude anotou. Arrastar o cartão muda o estado; o menu de contexto move, copia o código e descarta (descartado sai do quadro). A contagem de "para triar" na lateral é neutra (`textoSecundario`): triagem não é urgência e não pode puxar você para fora do flow.
+- **Cartão de item**: código em mono, prioridade em texto só quando alta ou crítica, ponto coral e "Claude" quando foi ele que anotou, título, onde mora (mono, cortado no meio) com o grau, e "→ card externo" quando foi levado para a sprint. Sem cor de estado: a coluna já diz o estado.
+- **Backlog**: árvore épico → história → task → subtask (bug dentro de um item aparece também), com a barra de criação (tipo, pai válido, título). Feitos ficam ocultos por padrão; descartados nunca aparecem.
 - **Sua vez**: fila de triagem. Lista curta à esquerda, decisão em foco à direita.
 - Estado vazio é sempre uma frase curta que diz o próximo passo, com borda tracejada ou centralizado na área. Nunca uma tela em branco.
-- Preferências moram na cena `Settings` (⌘,). Comandos do app ficam no menu (`.commands`) com atalho; se uma ação tem botão, ela também tem item de menu.
+- Preferências moram na cena `Settings` (⌘,), em abas: **Geral** e **Jornadas** (lista dos tipos à esquerda; à direita, prompt, etapas e skills, com as instaladas para marcar e um campo para nome à mão). Comandos do app ficam no menu (`.commands`) com atalho; se uma ação tem botão, ela também tem item de menu.
 
 ## Cor
 
@@ -52,7 +59,7 @@ Regras:
 - **Coral só para o Claude.** Vez dele, nota dele, frente rodando.
 - **Parado não tem cor**: ponto vazado em `textoSecundario`.
 - **Concluído é neutro**, nunca verde. Coisa feita não pede atenção.
-- Não existe azul, roxo, gradiente ou cor decorativa. Erro é a única exceção às cores de vez.
+- Não existe azul, roxo, gradiente ou cor decorativa. Erro é a única exceção às cores de vez. O fundo líquido da seleção de projetos (ver Movimento) é o único gradiente, feito só com as cores de vez diluídas.
 - **Cor nunca é a única pista**: toda vez também tem texto ("Sua vez", "Vez do Claude", "parado"), e todo estado tem forma.
 - Contraste medido (WCAG) dos pares de texto: `textoSecundario` 6,9:1 sobre `superficie` no escuro e 6,7:1 no claro; `voceTexto` 6,8:1 no claro; `claudeTexto` 6,0:1 no claro; `textoSobreVoce` 13:1. Token novo de texto só entra com o contraste medido e anotado aqui.
 
@@ -93,7 +100,7 @@ Todo fato mostra de onde veio. O grau é desenhado por **forma**, não por cor, 
 - Uma linha por frente: nome, trilho segmentado (um segmento por passo) e estado à direita, com ponto da vez.
 - Segmento feito: `concluido`. Rodando: `claude`. Esperando você: contorno `voce` com fundo `voce` a 8%. Futuro: `superficieAtiva`.
 - Nada anima dentro do trilho. Progresso muda quando o passo muda.
-- O **terminal** abre como gaveta das trilhas (atalho ⌃\`), escondido por padrão. Ele serve para conferir, não para acompanhar.
+- O **terminal** é o **bastidor**: abre como gaveta das trilhas ("Ver bastidor", atalho ⌃\`), escondido por padrão, já na sessão do Claude do assunto. Ele serve para conferir ou responder uma permissão, não para acompanhar.
 
 ## Tipografia
 
@@ -133,8 +140,16 @@ Todo fato mostra de onde veio. O grau é desenhado por **forma**, não por cor, 
 ## Movimento
 
 - Transições com `.smooth` ou `.snappy`. Sem durações inventadas.
+- **Troca de tela segue a hierarquia** (`ScreenMotion`, `MotionStack`). As duas telas ficam vivas durante a troca e o efeito é aplicado pelo progresso, porque a transição de saída do SwiftUI não move telas feitas de view do AppKit.
+  - **Seleção → projeto (desce um nível): mergulho.** A seleção cresce até 108% e some por cima; o projeto vem de 94% até o tamanho cheio. Mola de 0,55 s sem quique.
+  - **Projeto → seleção (sobe um nível):** o inverso. O projeto recua a 94% e some; a seleção volta de 108%.
+  - **Projeto → outro projeto (mesmo nível, outro espaço): deslize lateral**, como a troca de mesa do Mac. O workspace inteiro (lateral e conteúdo) desliza; o projeto de id maior fica à direita. Mola de 0,5 s.
+  - **Tela → tela no mesmo projeto: a lateral fica parada e só o conteúdo rola na vertical**, no sentido da lateral: destino mais abaixo entra por baixo, mais acima entra por cima. Mola de 0,42 s.
+  - Com "Reduzir movimento", todas viram um fade de 0,2 s.
+  - **Nunca recorte (`.clipped()`, `clipShape`, máscara) em volta da `NavigationSplitView`**: ela perde o espaço da barra de título e a janela inteira sobe por baixo dela. Por isso só a pilha da área de conteúdo recorta; a pilha dos projetos não, e o que passa da borda cai fora da janela.
 - Respeite "Reduzir movimento" (`@Environment(\.accessibilityReduceMotion)`): troque movimento por fade.
 - Nada pisca, pulsa ou se move sem o usuário ter um motivo para olhar. Troca de vez é troca de cor, não animação. **Atenção do usuário é recurso escasso**, e este é o princípio central do Friday.
+- **Exceção: a seleção de projetos**, tela de passagem onde ainda não há trabalho a proteger. Ela tem fundo líquido (`LiquidBackground`: malha 4×4 escura com limão e coral até 22%, que se movem e respiram num ciclo de ~9 s) e botões vivos (`.fridayLive`, `.fridayLiveRow`): ao passar o mouse, a cor entra em 0,35 s e sai em 0,55 s (borda limão a 32%, fundo a 6%, texto `voceTexto`) e um halo limão suave acompanha o cursor; no clique, um brilho limão nasce no ponto do clique e se espalha sumindo em 0,9 s. Com "Reduzir movimento", o fundo para e o brilho vira um lampejo curto. Esses componentes não entram em tela de trabalho.
 
 ## Comunicação na interface
 

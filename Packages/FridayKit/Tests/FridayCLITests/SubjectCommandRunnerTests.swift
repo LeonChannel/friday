@@ -82,4 +82,21 @@ struct SubjectCommandRunnerTests {
         #expect(runner.run(["evidencia", "1", "--grau", "medido", "--fonte", "s", "--", "--flag no texto"]).exitCode == 0)
         #expect(try repository.subject(id: 1)?.evidences[0].fact == "--flag no texto")
     }
+
+    @Test func stageCommandMarksProgressAndReadShowsIt() throws {
+        let (runner, repository) = try makeRunner()
+        _ = try repository.insert(try Subject(title: "Login", activity: .error, stages: ["Reproduzir", "Causa"], createdAt: Date(timeIntervalSince1970: 1_000)))
+        #expect(runner.run(["etapa", "1", "2", "--estado", "esperando-voce", "--nota", "duas causas"]).output == "etapa 2 (Causa) no assunto 1: esperando você\n")
+        let read = runner.run(["assunto", "ler", "1"]).output
+        #expect(read.contains("tipo: Erro"))
+        #expect(read.contains("1. Reproduzir · concluída\n2. Causa · esperando você · duas causas"))
+    }
+
+    @Test func stageCommandRefusesBadStateAndUnknownStage() throws {
+        let (runner, repository) = try makeRunner()
+        _ = try repository.insert(try Subject(title: "x", stages: ["A"], createdAt: Date(timeIntervalSince1970: 1_000)))
+        #expect(runner.run(["etapa", "1", "1", "--estado", "feita"]).exitCode == 2)
+        let unknown = runner.run(["etapa", "1", "3", "--estado", "concluida"])
+        #expect(unknown.exitCode == 1 && unknown.errorOutput == "Não existe a etapa 3 neste assunto.\n")
+    }
 }

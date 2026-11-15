@@ -17,19 +17,24 @@ public struct SubjectTurn: Equatable, Sendable {
 }
 
 extension Subject {
-    /// Vez do assunto: você se algo espera o dev, Claude se há frente rodando, senão parado.
+    /// Vez do assunto: você se algo espera o dev (pergunta, frente ou etapa), Claude se há frente ou etapa rodando, senão parado.
     public var turn: SubjectTurn {
         let waitingQuestions = questions.filter { $0.isOpen && $0.waitsForYou }.count
         let waitingFronts = fronts.filter { $0.state == .waitingForYou }.count
-        if waitingQuestions + waitingFronts > 0 {
+        let waitingStage = stages.first { $0.state == .waitingForYou }
+        if waitingQuestions + waitingFronts > 0 || waitingStage != nil {
             var parts: [String] = []
             if waitingQuestions > 0 { parts.append(waitingQuestions == 1 ? "1 decisão esperando" : "\(waitingQuestions) decisões esperando") }
             if waitingFronts > 0 { parts.append(waitingFronts == 1 ? "1 frente esperando você" : "\(waitingFronts) frentes esperando você") }
+            if let waitingStage { parts.append("etapa \(waitingStage.name) esperando você") }
             return SubjectTurn(holder: .you, reason: parts.joined(separator: " · "))
         }
         let running = fronts.filter { $0.state == .running }.count
         if running > 0 {
             return SubjectTurn(holder: .claude, reason: running == 1 ? "1 frente rodando" : "\(running) frentes rodando")
+        }
+        if let stage = stages.first(where: { $0.state == .running }) {
+            return SubjectTurn(holder: .claude, reason: "etapa \(stage.name)")
         }
         return SubjectTurn(holder: .idle, reason: "nada em andamento")
     }

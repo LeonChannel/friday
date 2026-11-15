@@ -14,11 +14,27 @@ enum SubjectMarkdown {
         }
     }
 
+    static func stageLabel(_ state: StageState) -> String {
+        switch state {
+        case .pending: "pendente"
+        case .running: "rodando"
+        case .waitingForYou: "esperando você"
+        case .done: "concluída"
+        }
+    }
+
     static func render(_ subject: Subject) -> String {
         let turn = subject.turn
         let holder = turn.holder == .you ? "você" : turn.holder == .claude ? "Claude" : "parado"
         var lines = ["# \(subject.title) (assunto \(subject.id ?? 0))", "vez: \(holder) · \(turn.reason)"]
+        if let activity = subject.activity { lines.append("tipo: \(activity.displayName)") }
         if !subject.intent.isEmpty { lines += ["", "## Intenção", subject.intent] }
+        if !subject.stages.isEmpty {
+            lines += ["", "## Etapas"]
+            for (index, stage) in subject.stages.enumerated() {
+                lines.append("\(index + 1). \(stage.name) · \(stageLabel(stage.state))" + (stage.note.map { " · \($0)" } ?? ""))
+            }
+        }
         if !subject.questions.isEmpty {
             lines += ["", "## Perguntas"]
             for q in subject.questions {

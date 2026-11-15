@@ -23,6 +23,16 @@ struct DefaultLaunchPlannerTests {
         #expect(plan.arguments == ["-l", "-i", "-c", "exec claude --session-id 11111111-2222-3333-4444-555555555555"])
     }
 
+    @Test func claudeGetsBriefingAsLastQuotedArgument() throws {
+        let plan = try planner.plan(agent: .claude, project: project, session: session, initialPrompt: "Assunto 1: it's\nquebrado")
+        #expect(plan.arguments.last == "exec claude --session-id 11111111-2222-3333-4444-555555555555 'Assunto 1: it'\\''s\nquebrado'")
+    }
+
+    @Test func briefingIsIgnoredForShellAndCodex() throws {
+        #expect(try planner.plan(agent: .codex, project: project, session: session, initialPrompt: "x").arguments == ["-l", "-i", "-c", "exec codex"])
+        #expect(try planner.plan(agent: .shell, project: project, session: session, initialPrompt: "x").arguments == ["-l", "-i"])
+    }
+
     @Test func codexRunsBareThroughLoginShell() throws {
         let plan = try planner.plan(agent: .codex, project: project, session: session)
         #expect(plan.arguments == ["-l", "-i", "-c", "exec codex"])

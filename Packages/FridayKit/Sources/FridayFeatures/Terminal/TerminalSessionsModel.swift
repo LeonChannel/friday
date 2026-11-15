@@ -23,6 +23,8 @@ public struct TerminalSession: Identifiable, Equatable, Sendable {
     public var programTitle: String?
     public let plan: LaunchPlan
     public var state: TerminalSessionState
+    /// Assunto que abriu a sessão, quando foi o início de uma jornada.
+    public var subjectID: Int64?
 
     /// O que a aba mostra: o título do programa ou, sem ele, o nome numerado do agente.
     public var displayTitle: String {
@@ -53,12 +55,14 @@ public final class TerminalSessionsModel {
 
     /// Abre uma sessão nova do programa, na pasta do projeto, e a deixa selecionada.
     @discardableResult
-    public func open(agent: AgentKind, environment extra: [String: String] = [:]) -> TerminalSession? {
+    public func open(
+        agent: AgentKind, environment extra: [String: String] = [:], initialPrompt: String? = nil, subjectID: Int64? = nil
+    ) -> TerminalSession? {
         let id = makeSessionID()
         do {
-            var plan = try planner.plan(agent: agent, project: project, session: id)
+            var plan = try planner.plan(agent: agent, project: project, session: id, initialPrompt: initialPrompt)
             plan.environment.merge(extra) { _, new in new }
-            let session = TerminalSession(id: id, agent: agent, title: title(for: agent), plan: plan, state: .running)
+            let session = TerminalSession(id: id, agent: agent, title: title(for: agent), plan: plan, state: .running, subjectID: subjectID)
             sessions.append(session)
             selection = id
             openError = nil
@@ -67,6 +71,11 @@ public final class TerminalSessionsModel {
             openError = "Não foi possível abrir \(agent.displayName): \(error.localizedDescription)"
             return nil
         }
+    }
+
+    /// Sessão do Claude aberta para o assunto que ainda está rodando, se houver.
+    public func runningSession(forSubject subjectID: Int64) -> TerminalSession? {
+        sessions.last { $0.subjectID == subjectID && $0.state == .running }
     }
 
     /// Remove a sessão da lista; a view que a mostra encerra o processo ao sair da tela.
@@ -97,6 +106,11 @@ public final class TerminalSessionsModel {
     private func title(for agent: AgentKind) -> String {
         let sameKind = sessions.filter { $0.agent == agent }.count
         return sameKind == 0 ? agent.displayName : "\(agent.displayName) \(sameKind + 1)"
+    }
+
+    /// Inicia o processo da sessão sem mostrar o terminal (o bastidor de uma jornada).
+    public func startInBackground(_ session: TerminalSession) {
+        _ = terminalView(for: session)
     }
 
     /// View viva do terminal da sessão (criada e iniciada na primeira vez).

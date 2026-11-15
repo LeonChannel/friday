@@ -1,6 +1,6 @@
 ---
 name: friday-assunto
-description: Registra no Friday o estado de um assunto (evidência, pergunta, decisão, frente) pela CLI `friday`. Use quando o dev e você estiverem investigando uma hipótese, um problema de arquitetura ou uma decisão de produto que o Friday acompanha, ou quando o dev citar um assunto pelo número.
+description: Registra no Friday o estado de um assunto (etapa, evidência, pergunta, decisão, frente) pela CLI `friday`. Use quando o dev e você estiverem investigando uma hipótese, um problema de arquitetura ou uma decisão de produto que o Friday acompanha, ou quando o dev citar um assunto pelo número.
 ---
 
 # Assunto no Friday
@@ -25,6 +25,8 @@ Se a variável `FRIDAY_ASSUNTO` existir, a sessão foi aberta de dentro desse as
   `friday decisao <id> "<decisão>" --porque "..." [--mudaria-se "..."] [--responde <n>]`
 - **Frente**: você começou, bloqueou ou terminou um trabalho. Mesmo nome atualiza a frente.
   `friday frente <id> "<nome>" --criterio "como sei que acabou" --estado rodando|esperando-voce|concluida [--passo "..."]... [--feitos <n>]`
+- **Etapa**: o assunto nasceu de uma jornada com etapas fixas (aparecem em `friday assunto ler`). Marque a etapa ao entrar nela e ao sair; rodar uma etapa conclui as anteriores. Precisa do dev para seguir? `esperando-voce`, com a nota dizendo o quê.
+  `friday etapa <id> <n> --estado rodando|esperando-voce|concluida [--nota "o que saiu dela"]`
 - **Alternativa** (opcional): comparar opções. `friday alternativa <id> "<nome>" --ganho ... --risco ... --esforco ... --reversivel ...`
 
 ## Graus: não infle
@@ -37,8 +39,8 @@ Nunca marque `medido` o que você leu ou supôs. O dev decide pelo grau.
 
 ## Tetos (recusa com o tamanho)
 
-Título 80 · intenção 300 · pergunta 240 · opção 60 · consequência 140 · evidência 200 · fonte 100 · decisão 200 · porquê 160 · critério 160 · passo 100. Texto acima volta com erro; encurte, não divida em vários.
+Título 80 · intenção 300 · nota da etapa 160 · pergunta 240 · opção 60 · consequência 140 · evidência 200 · fonte 100 · decisão 200 · porquê 160 · critério 160 · passo 100. Texto acima volta com erro; encurte, não divida em vários.
 
 ## Vez
 
-Pergunta com `--espera-voce` aberta ou frente `esperando-voce` passa a vez ao dev. Frente `rodando` é a sua vez. Mude o estado da frente assim que bloquear ou terminar.
+Pergunta com `--espera-voce` aberta, frente ou etapa `esperando-voce` passa a vez ao dev. Frente ou etapa `rodando` é a sua vez. Mude o estado da frente assim que bloquear ou terminar.

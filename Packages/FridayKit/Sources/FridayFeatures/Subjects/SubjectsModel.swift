@@ -53,7 +53,11 @@ public final class SubjectsModel {
 
     /// Cria um assunto novo.
     @discardableResult
-    public func create(title: String, intent: String = "", projectID: Int64? = nil, now: Date = Date()) throws -> Subject {
-        try repository.insert(Subject(title: title, projectID: projectID ?? projectScope, intent: intent, createdAt: now))
+    public func create(
+        title: String, intent: String = "", projectID: Int64? = nil, activity: ActivityKind? = nil, stages: [String] = [], now: Date = Date()
+    ) throws -> Subject {
+        try repository.insert(Subject(
+            title: title, projectID: projectID ?? projectScope, intent: intent, activity: activity, stages: stages, createdAt: now
+        ))
     }
 }

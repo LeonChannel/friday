@@ -66,7 +66,7 @@ struct CodexSessionHooksTests {
         defer { dir.remove() }
         let locations = SensorLocations(root: dir.url.appendingPathComponent("Application Support", isDirectory: true))
         let customizer = CompositeLaunchCustomizer([
-            ClaudeSessionHooks(locations: locations),
+            ClaudeSessionHooks(locations: locations, home: dir.url.path),
             CodexSessionHooks(locations: locations, isEnabled: { true }),
         ])
         let planner = DefaultLaunchPlanner(userShell: "/bin/zsh", home: "/h", user: "u", language: "en_US.UTF-8", customizer: customizer)

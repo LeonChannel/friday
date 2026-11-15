@@ -1,5 +1,5 @@
-// Resumo: Mesa, a tela inicial: a pergunta "O que está te incomodando?" para abrir um assunto e os assuntos em três colunas por vez.
-// Tags: assuntos, interface
+// Resumo: Mesa, a tela inicial: escolher o tipo de atividade e descrever o pedido abre o assunto e inicia a jornada; os assuntos em três colunas por vez.
+// Tags: assuntos, interface, jornadas
 
 import FridayDomain
 import SwiftUI
@@ -7,8 +7,13 @@ import SwiftUI
 /// Tela inicial do Friday.
 struct MesaView: View {
     @Environment(SubjectsModel.self) private var subjects
+    @Environment(WorkspaceModel.self) private var workspace
+    @Environment(AppSettings.self) private var settings
+    /// Projeto aberto: é nele que o Claude da jornada roda.
+    let project: Project?
     let open: (Int64) -> Void
     @State private var concern = ""
+    @State private var activity: ActivityKind?
     @State private var errorMessage: String?
     @FocusState private var commandFocused: Bool
 
@@ -30,26 +35,46 @@ struct MesaView: View {
     }
 
     private var commandBar: some View {
-        HStack(spacing: Spacing.md) {
-            TextField("O que está te incomodando?", text: $concern)
-                .textFieldStyle(.plain)
-                .typography(.corpo)
-                .foregroundStyle(Theme.texto)
-                .focused($commandFocused)
-                .onSubmit(create)
-            Button("Começar", action: create)
-                .buttonStyle(.fridayPrimary)
-                .keyboardShortcut(.return, modifiers: .command)
-                .disabled(concern.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-        }
-        .padding(Spacing.md)
-        .background(RoundedRectangle(cornerRadius: Radius.bloco).fill(Theme.superficieElevada))
-        .overlay(RoundedRectangle(cornerRadius: Radius.bloco).strokeBorder(Theme.linha))
-        .overlay(alignment: .bottomLeading) {
-            if let errorMessage {
-                Text(errorMessage).typography(.metadado).foregroundStyle(Theme.erro).offset(y: 22)
+        VStack(alignment: .leading, spacing: Spacing.sm) {
+            ActivityPicker(selection: $activity)
+            HStack(spacing: Spacing.md) {
+                TextField(activity?.prompt ?? "Escolha o tipo de atividade acima", text: $concern)
+                    .textFieldStyle(.plain)
+                    .typography(.corpo)
+                    .foregroundStyle(Theme.texto)
+                    .focused($commandFocused)
+                    .disabled(activity == nil)
+                    .onSubmit(create)
+                Button("Começar", action: create)
+                    .buttonStyle(.fridayPrimary)
+                    .keyboardShortcut(.return, modifiers: .command)
+                    .disabled(!canCreate)
+                MonoLabel("⌘↵")
             }
+            .padding(Spacing.md)
+            .background(RoundedRectangle(cornerRadius: Radius.bloco).fill(Theme.superficieElevada))
+            .overlay(RoundedRectangle(cornerRadius: Radius.bloco).strokeBorder(Theme.linha))
+            if let activity { journeyLine(settings.journey(for: activity)) }
+            if let errorMessage { Text(errorMessage).typography(.metadado).foregroundStyle(Theme.erro) }
         }
+        .onChange(of: activity) { if activity != nil { commandFocused = true } }
+    }
+
+    /// O que a jornada escolhida vai fazer, para o dev saber antes de começar.
+    private func journeyLine(_ journey: Journey) -> some View {
+        let text: String
+        if journey.isEmpty {
+            text = "\(journey.kind.summary) Jornada vazia: o Claude recebe só o pedido. Configure em Ajustes › Jornadas (⌘,)."
+        } else {
+            let stages = journey.cleanStages.count, skills = journey.cleanSkills.count
+            text = "\(journey.kind.summary) \(stages) \(stages == 1 ? "etapa" : "etapas") · \(skills) \(skills == 1 ? "skill" : "skills")"
+                + (journey.prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "" : " · prompt próprio")
+        }
+        return Text(text).typography(.metadado).foregroundStyle(Theme.textoSecundario)
+    }
+
+    private var canCreate: Bool {
+        activity != nil && !concern.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private func column(_ title: String, style: TurnStyle, rows: [SubjectRow], empty: String) -> some View {
@@ -74,15 +99,18 @@ struct MesaView: View {
         .frame(maxWidth: .infinity, alignment: .topLeading)
     }
 
+    /// Grava o assunto com as etapas da jornada e já chama o Claude no bastidor.
     private func create() {
         let text = concern.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else { return }
+        guard let activity, !text.isEmpty else { return }
+        let journey = settings.journey(for: activity)
         do {
             let title = String(text.prefix(SubjectLimits.title))
             let intent = text.count > SubjectLimits.title ? String(text.prefix(SubjectLimits.intent)) : ""
-            let subject = try subjects.create(title: title, intent: intent)
+            let subject = try subjects.create(title: title, intent: intent, projectID: project?.id, activity: activity, stages: journey.cleanStages)
             concern = ""
             errorMessage = nil
+            if let project { errorMessage = workspace.startJourney(subject: subject, journey: journey, project: project) }
             if let id = subject.id { open(id) }
         } catch {
             errorMessage = error.localizedDescription

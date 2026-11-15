@@ -10,6 +10,7 @@ Leia o guia da área antes de mexer nela. Eles valem como regra, não como suges
 - [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md): camadas, fluxo de dados, concorrência, persistência, processos e agentes.
 - [`docs/TESTES.md`](docs/TESTES.md): níveis de teste, regras e a evidência mínima de cada fase.
 - [`docs/VOCABULARIO.md`](docs/VOCABULARIO.md): cabeçalho obrigatório de cada arquivo (`// Resumo:` e `// Tags:`) e a lista fechada de tags.
+- [`docs/MEMORIA.md`](docs/MEMORIA.md): o vault da memória. As três camadas (abstração, processual, projeto), a área de trabalho do assunto, o formato da nota e o que chega ao agente.
 
 Para achar código: comece pelo [`docs/MAPA.md`](docs/MAPA.md), o índice por tag gerado dos cabeçalhos. Mudou ou criou arquivo? Atualize o cabeçalho e rode `swift scripts/mapa.swift`; o CI recusa mapa desatualizado.
 

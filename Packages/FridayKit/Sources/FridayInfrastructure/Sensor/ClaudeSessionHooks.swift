@@ -1,5 +1,5 @@
-// Resumo: Prepara uma sessão do Claude Code para reportar hooks ao Friday: settings próprio da sessão, variáveis de ambiente e o flag --settings.
-// Tags: sensor, agentes
+// Resumo: Prepara uma sessão do Claude Code para reportar hooks e cota ao Friday: settings próprio da sessão (hooks e statusline), variáveis de ambiente e o flag --settings.
+// Tags: sensor, agentes, cota
 
 import FridayDomain
 import Foundation
@@ -17,23 +17,31 @@ public struct ClaudeSessionHooks: AgentLaunchCustomizing {
     ]
 
     private let locations: SensorLocations
+    private let home: String
 
-    public init(locations: SensorLocations) {
+    /// `home` é onde a statusline do usuário é procurada (só leitura); o padrão é a pasta do usuário.
+    public init(locations: SensorLocations, home: String = NSHomeDirectory()) {
         self.locations = locations
+        self.home = home
     }
 
     /// `["--settings", <arquivo da sessão>]` só para o Claude; grava o script e o settings e apaga settings antigos.
     public func extraArguments(agent: AgentKind, session: AgentSessionID) throws -> [String] {
         guard agent == .claude else { return [] }
         let script = try HookScript.install(in: locations.hooksDirectory)
-        let settings = try writeSettings(session: session, script: script)
+        let statusline = try StatuslineScript.install(in: locations.hooksDirectory)
+        let settings = try writeSettings(session: session, script: script, statusline: statusline)
         removeStaleSettings(keeping: settings)
         return ["--settings", settings.path]
     }
 
-    /// `FRIDAY_HOOK_SOCKET` para o script de hook achar o socket. `FRIDAY_SESSION_ID` já vem do planner.
+    /// `FRIDAY_HOOK_SOCKET` para os scripts acharem o socket e `FRIDAY_STATUSLINE_NEXT` com a statusline do usuário,
+    /// que a do Friday roda em seguida (a da sessão substitui a do usuário; sem isso ela sumiria). `FRIDAY_SESSION_ID` já vem do planner.
     public func extraEnvironment(agent: AgentKind, session: AgentSessionID) throws -> [String: String] {
-        agent == .claude ? ["FRIDAY_HOOK_SOCKET": locations.socketPath] : [:]
+        guard agent == .claude else { return [:] }
+        var environment = ["FRIDAY_HOOK_SOCKET": locations.socketPath]
+        if let next = StatuslineScript.userCommand(home: home) { environment["FRIDAY_STATUSLINE_NEXT"] = next }
+        return environment
     }
 
     private func removeStaleSettings(keeping current: URL) {
@@ -46,20 +54,24 @@ public struct ClaudeSessionHooks: AgentLaunchCustomizing {
         }
     }
 
-    /// Conteúdo do settings da sessão: um hook de comando por evento, todos chamando o mesmo script.
-    func settingsData(script: URL) throws -> Data {
+    /// Conteúdo do settings da sessão: um hook de comando por evento, todos chamando o mesmo script, e a statusline do Friday.
+    func settingsData(script: URL, statusline: URL? = nil) throws -> Data {
         let command = HookScript.commandLine(script: script, agent: "claude")
         let entry: [String: Any] = ["hooks": [["type": "command", "command": command, "timeout": 5]]]
         let hooks = Dictionary(uniqueKeysWithValues: Self.hookEvents.map { ($0, [entry]) })
-        return try JSONSerialization.data(withJSONObject: ["hooks": hooks], options: [.prettyPrinted, .sortedKeys])
+        var settings: [String: Any] = ["hooks": hooks]
+        if let statusline {
+            settings["statusLine"] = ["type": "command", "command": "'" + statusline.path.replacingOccurrences(of: "'", with: "'\\''") + "'"]
+        }
+        return try JSONSerialization.data(withJSONObject: settings, options: [.prettyPrinted, .sortedKeys])
     }
 
-    private func writeSettings(session: AgentSessionID, script: URL) throws -> URL {
+    private func writeSettings(session: AgentSessionID, script: URL, statusline: URL) throws -> URL {
         try FileManager.default.createDirectory(
             at: locations.sessionsDirectory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700]
         )
         let url = locations.sessionsDirectory.appendingPathComponent("\(session).settings.json")
-        try settingsData(script: script).write(to: url, options: .atomic)
+        try settingsData(script: script, statusline: statusline).write(to: url, options: .atomic)
         return url
     }
 }

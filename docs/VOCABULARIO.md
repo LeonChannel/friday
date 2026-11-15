@@ -30,3 +30,7 @@ O índice `docs/MAPA.md` é gerado a partir desses cabeçalhos com `swift script
 | `visual` | tema, cores, tipografia, espaçamentos e componentes visuais próprios do Friday |
 | `assuntos` | o assunto e suas partes (intenção, perguntas, evidências, alternativas, decisões, frentes) e a vez |
 | `configuracoes` | preferências do usuário e a tela de Ajustes |
+| `cota` | uso das cotas do Claude (janelas de 5 horas e 7 dias) lido da statusline e mostrado no rodapé da lateral |
+| `backlog` | épico, história, task, subtask e bug do projeto: o quadro de bugs, a árvore, a CLI `friday bug`/`friday item` e o espelho no vault |
+| `memoria` | o vault: camadas (abstração, processual, projeto), notas, área de trabalho do assunto e o que chega ao agente pelos hooks |
+| `jornadas` | tipo de atividade (erro, teste, tarefa, marco, dúvida), a jornada que o dev configura para cada um (prompt, skills, etapas), o briefing do Claude e a lousa de etapas |

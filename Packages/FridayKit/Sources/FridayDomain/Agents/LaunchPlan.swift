@@ -21,6 +21,15 @@ public struct LaunchPlan: Equatable, Sendable {
 /// Monta a receita de uma sessão. A versão com hooks do Friday vive na infraestrutura do sensor.
 public protocol LaunchPlanning: Sendable {
     func plan(agent: AgentKind, project: Project, session: AgentSessionID) throws -> LaunchPlan
+    /// Receita com uma primeira mensagem para o agente (o briefing da jornada). Só o Claude recebe.
+    func plan(agent: AgentKind, project: Project, session: AgentSessionID, initialPrompt: String?) throws -> LaunchPlan
+}
+
+extension LaunchPlanning {
+    /// Padrão para quem não sabe passar mensagem inicial (dublês de teste): ignora o prompt.
+    public func plan(agent: AgentKind, project: Project, session: AgentSessionID, initialPrompt: String?) throws -> LaunchPlan {
+        try plan(agent: agent, project: project, session: session)
+    }
 }
 
 /// Acréscimos ao comando de um agente, por sessão (ex.: `--settings` com os hooks do Friday).

@@ -1,7 +1,7 @@
 {
   "name": "friday",
-  "description": "Ferramentas do Friday para sessões abertas dentro do app: registrar o estado de um assunto pela CLI friday.",
-  "version": "0.1.0",
+  "description": "Ferramentas do Friday para sessões abertas dentro do app: registrar o estado de um assunto, ler e gravar a memória (vault) e anotar bugs e itens no backlog pela CLI friday.",
+  "version": "0.3.0",
   "author": {
     "name": "Leonardo Porte"
   }

@@ -33,6 +33,14 @@ public struct Project: Identifiable, Hashable, Sendable {
         URL(fileURLWithPath: rawPath).standardizedFileURL.path
     }
 
+    /// Projeto que contém o caminho; o mais específico ganha (repositório cadastrado dentro de uma pasta-projeto).
+    public static func containing(_ path: String, in projects: [Project]) -> Project? {
+        let path = normalizedPath(path)
+        return projects
+            .filter { path == $0.path || path.hasPrefix($0.path.hasSuffix("/") ? $0.path : $0.path + "/") }
+            .max { $0.path.count < $1.path.count }
+    }
+
     /// Nome inicial do projeto: o nome da última pasta do caminho.
     public static func defaultName(forPath path: String) -> String {
         (path as NSString).lastPathComponent

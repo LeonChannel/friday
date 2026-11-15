@@ -1,5 +1,5 @@
-// Resumo: Prova o estado das sessões de terminal: abrir, numerar títulos, selecionar, fechar e registrar o fim do processo.
-// Tags: terminal, agentes, testes
+// Resumo: Prova o estado das sessões de terminal: abrir (com o briefing de uma jornada), numerar títulos, selecionar, fechar e registrar o fim do processo.
+// Tags: terminal, agentes, testes, jornadas
 
 import FridayDomain
 import FridayFeatures
@@ -17,7 +17,29 @@ struct TerminalSessionsModelTests {
         }
     }
 
+    /// Planner que põe a primeira mensagem nos argumentos, para o teste ver que ela chegou.
+    private struct PromptPlanner: LaunchPlanning {
+        func plan(agent: AgentKind, project: Project, session: AgentSessionID) throws -> LaunchPlan {
+            try plan(agent: agent, project: project, session: session, initialPrompt: nil)
+        }
+        func plan(agent: AgentKind, project: Project, session: AgentSessionID, initialPrompt: String?) throws -> LaunchPlan {
+            LaunchPlan(executable: "/bin/\(agent.rawValue)", arguments: initialPrompt.map { [$0] } ?? [], environment: [:], workingDirectory: project.path)
+        }
+    }
+
     private let project = Project(name: "p", path: "/tmp/p", kind: .folder, addedAt: .distantPast)
+
+    @Test func journeySessionCarriesBriefingAndSubjectUntilItExits() throws {
+        let model = TerminalSessionsModel(project: project, planner: PromptPlanner())
+        model.open(agent: .claude)
+        let session = try #require(model.open(agent: .claude, environment: ["FRIDAY_ASSUNTO": "4"], initialPrompt: "briefing", subjectID: 4))
+        #expect(session.plan.arguments == ["briefing"])
+        #expect(session.plan.environment["FRIDAY_ASSUNTO"] == "4")
+        #expect(model.runningSession(forSubject: 4)?.id == session.id)
+        #expect(model.runningSession(forSubject: 5) == nil)
+        model.markExited(id: session.id, code: 0)
+        #expect(model.runningSession(forSubject: 4) == nil)
+    }
 
     @Test func openSelectsNewSessionRunningInProjectFolder() throws {
         let model = TerminalSessionsModel(project: project, planner: FakePlanner())

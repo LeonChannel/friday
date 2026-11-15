@@ -13,7 +13,8 @@ final class TerminalViewRegistry {
     /// View da sessão; na primeira chamada cria e inicia o processo da receita.
     func view(for session: TerminalSession, onTitle: @escaping @MainActor (String) -> Void, onExit: @escaping @MainActor (Int32?) -> Void) -> LocalProcessTerminalView {
         if let entry = entries[session.id] { return entry.view }
-        let view = LocalProcessTerminalView(frame: .zero)
+        // Tamanho inicial razoável: a sessão pode nascer no bastidor, sem tela, e o Claude desenha conforme a largura.
+        let view = LocalProcessTerminalView(frame: NSRect(x: 0, y: 0, width: 960, height: 320))
         view.font = Typography.terminalFont()
         let delegate = TerminalProcessDelegate(onTitle: onTitle, onExit: onExit)
         view.processDelegate = delegate

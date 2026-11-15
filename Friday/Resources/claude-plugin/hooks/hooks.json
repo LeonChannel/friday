@@ -1,0 +1,33 @@
+{
+  "description": "Memória e backlog do Friday: contexto no início da sessão, notas ancoradas ao abrir arquivo e o lembrete de anotar bug sem parar. Fora de um projeto do Friday, fica calado.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "friday memoria hook 2>/dev/null || true",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "friday item hook 2>/dev/null || true",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Read|Edit|MultiEdit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "friday memoria hook 2>/dev/null || true",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

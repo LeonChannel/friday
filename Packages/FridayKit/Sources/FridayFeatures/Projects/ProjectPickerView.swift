@@ -1,4 +1,4 @@
-// Resumo: Seleção de projetos na abertura: busca, projetos recentes e as entradas para abrir pasta, clonar repositório ou criar pasta nova.
+// Resumo: Seleção de projetos na abertura: fundo líquido, busca, projetos recentes e as entradas para abrir pasta, clonar ou criar, com botões que reagem ao mouse.
 // Tags: projetos, interface
 
 import AppKit
@@ -32,11 +32,11 @@ struct ProjectPickerView: View {
 
             HStack(spacing: Spacing.sm) {
                 Button("Abrir pasta…", systemImage: "folder", action: pickFolder)
-                    .buttonStyle(.friday).keyboardShortcut("o", modifiers: .command)
+                    .buttonStyle(.fridayLive).keyboardShortcut("o", modifiers: .command)
                 Button("Clonar repositório…", systemImage: "arrow.down.circle") { sheet = .clone }
-                    .buttonStyle(.friday)
+                    .buttonStyle(.fridayLive)
                 Button("Criar pasta nova…", systemImage: "folder.badge.plus") { sheet = .create }
-                    .buttonStyle(.friday).keyboardShortcut("n", modifiers: [.command, .shift])
+                    .buttonStyle(.fridayLive).keyboardShortcut("n", modifiers: [.command, .shift])
             }
 
             VStack(alignment: .leading, spacing: Spacing.sm) {
@@ -61,7 +61,7 @@ struct ProjectPickerView: View {
                         }
                         ForEach(filtered) { project in
                             Button { open(project) } label: { ProjectPickerRow(project: project) }
-                                .buttonStyle(.plain)
+                                .buttonStyle(.fridayLiveRow)
                                 .contextMenu {
                                     Button("Mostrar no Finder") { NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: project.path)]) }
                                     Button("Remover da lista", role: .destructive) { remove(project) }
@@ -79,7 +79,8 @@ struct ProjectPickerView: View {
             .padding(.bottom, Spacing.xxl)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.fundo)
+        // Tela de passagem: a única onde o fundo se move (ver VISUAL.md, Movimento).
+        .background(LiquidBackground())
         .onAppear { searchFocused = !projects.projects.isEmpty }
         .sheet(item: $sheet) { kind in
             switch kind {
@@ -96,6 +97,14 @@ struct ProjectPickerView: View {
     }
 
     private func pickFolder() {
+        // O seletor do sistema bloqueia a tela: abre no próximo ciclo, para o brilho do clique já ter começado.
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(180))
+            choosePickedFolder()
+        }
+    }
+
+    private func choosePickedFolder() {
         guard let url = FolderPanel.choose(prompt: "Abrir") else { return }
         do {
             open(try projects.add(path: url.path))

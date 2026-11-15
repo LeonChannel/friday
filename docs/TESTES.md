@@ -37,6 +37,9 @@ Teste de interface automatizado (XCUITest) só para um fluxo crítico que os ní
 | Sensor (hooks) | integração do socket; fluxo com payloads gravados do Claude; no app: um evento real de uma sessão aparece gravado |
 | Pastas e git | integração com pasta e repo temporários: mudança de arquivo vira evento, `git status` refletido |
 | Linha do tempo e esteira | unitário das projeções a partir de uma sequência de eventos fixa; no app: uma sessão real vira linha do tempo |
+| Backlog | unitário da hierarquia, dos tetos, do código e das projeções (colunas, árvore, duplicata); integração do repositório (número por projeto, pai na transação) e do espelho numa pasta temporária; CLI com banco em memória e o hook; no app: um bug anotado pelo Claude aparece em "Novo" no quadro |
+| Jornadas | unitário da limpeza da jornada, do briefing (texto exato), do avanço das etapas e da vez; integração do catálogo de skills numa `.claude` temporária e das etapas no banco (incluindo assunto antigo sem etapas); CLI `friday etapa`; persistência nos Ajustes; no app: escolher o tipo, começar e ver a etapa mudar na lousa quando o Claude roda `friday etapa` |
+| Memória | unitário do formato da nota, da ordem e do teto do contexto; integração do vault numa pasta temporária e do hook pela CLI com eventos gravados; no app: uma sessão real do Claude recebe o contexto de início |
 
 ## Antes de considerar uma fase pronta
 

@@ -17,7 +17,7 @@ struct SensorServiceFlowTests {
         try await service.start()
 
         let session = AgentSessionID()
-        let hooks = ClaudeSessionHooks(locations: locations)
+        let hooks = ClaudeSessionHooks(locations: locations, home: dir.url.path)
         _ = try hooks.extraArguments(agent: .claude, session: session)
         let environment = try hooks.extraEnvironment(agent: .claude, session: session)
         let script = locations.hooksDirectory.appendingPathComponent(HookScript.fileName)

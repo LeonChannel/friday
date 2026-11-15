@@ -5,7 +5,7 @@ import FridayFeatures
 import Testing
 
 struct DestinationTests {
-    @Test(arguments: [Destination.desk, .yourTurn, .subject(3), .folder("/Users/exemplo/Projetos/EVUP/ELOS-API")])
+    @Test(arguments: [Destination.desk, .yourTurn, .memory, .backlog, .bugs, .subject(3), .folder("/Users/exemplo/Projetos/EVUP/ELOS-API")])
     func roundTrips(destination: Destination) {
         #expect(Destination(storageKey: destination.storageKey) == destination)
     }

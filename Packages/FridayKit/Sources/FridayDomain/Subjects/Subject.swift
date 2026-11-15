@@ -11,15 +11,24 @@ public struct Subject: Equatable, Sendable, Identifiable {
     public var createdAt: Date
     public var updatedAt: Date
     public var intent: String
+    /// Tipo de atividade que abriu o assunto; nil nos assuntos de antes das jornadas.
+    public var activity: ActivityKind?
     public private(set) var questions: [Question]
     public private(set) var evidences: [Evidence]
     public private(set) var alternatives: [Alternative]
     public private(set) var decisions: [Decision]
     public private(set) var fronts: [Front]
+    /// Trilho da jornada: etapas copiadas da configuração na criação, para mudar a jornada não mexer no que já roda.
+    public private(set) var stages: [Stage]
 
     /// Cria o assunto validando título e intenção contra os tetos.
-    public init(id: Int64? = nil, title: String, projectID: Int64? = nil, intent: String = "", createdAt: Date) throws {
+    public init(
+        id: Int64? = nil, title: String, projectID: Int64? = nil, intent: String = "",
+        activity: ActivityKind? = nil, stages: [String] = [], createdAt: Date
+    ) throws {
         self.id = id
+        self.activity = activity
+        self.stages = try stages.map { Stage(name: try SubjectLimits.validated($0, field: "Etapa", limit: SubjectLimits.stageName)) }
         self.title = try SubjectLimits.validated(title, field: "Título", limit: SubjectLimits.title)
         self.projectID = projectID
         self.intent = try Self.validatedIntent(intent)
@@ -35,8 +44,11 @@ public struct Subject: Equatable, Sendable, Identifiable {
     /// Remonta o assunto do que foi gravado, sem revalidar (o que está no banco já passou pela validação).
     public init(
         id: Int64?, title: String, projectID: Int64?, intent: String, createdAt: Date, updatedAt: Date,
-        questions: [Question], evidences: [Evidence], alternatives: [Alternative], decisions: [Decision], fronts: [Front]
+        questions: [Question], evidences: [Evidence], alternatives: [Alternative], decisions: [Decision], fronts: [Front],
+        activity: ActivityKind? = nil, stages: [Stage] = []
     ) {
+        self.activity = activity
+        self.stages = stages
         self.id = id
         self.title = title
         self.projectID = projectID
@@ -156,5 +168,24 @@ public struct Subject: Equatable, Sendable, Identifiable {
         if let index { fronts[index] = front } else { fronts.append(front) }
         updatedAt = now
         return front
+    }
+
+    /// Muda o estado de uma etapa (`number` começa em 1). Etapa que passa a rodar ou esperar você vira a atual:
+    /// as anteriores ainda pendentes viram concluídas, porque a jornada anda em ordem.
+    @discardableResult
+    public mutating func setStage(_ number: Int, state: StageState, note: String? = nil, at now: Date) throws -> Stage {
+        guard stages.indices.contains(number - 1) else { throw SubjectError.unknownStage(number) }
+        let index = number - 1
+        if let note { stages[index].note = try SubjectLimits.validated(note, field: "Nota da etapa", limit: SubjectLimits.stageNote) }
+        stages[index].state = state
+        stages[index].updatedAt = now
+        if state != .pending {
+            for earlier in stages.indices where earlier < index && stages[earlier].state != .done {
+                stages[earlier].state = .done
+                stages[earlier].updatedAt = now
+            }
+        }
+        updatedAt = now
+        return stages[index]
     }
 }

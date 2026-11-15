@@ -80,6 +80,43 @@ public struct AppDatabase: Sendable {
                 t.add(column: "lastOpenedAt", .datetime)
             }
         }
+        migrator.registerMigration("v6-usage-quota") { db in
+            // Uma linha só (id 1): a cota é da conta e só o retrato mais recente importa.
+            try db.create(table: "usageQuota") { t in
+                t.primaryKey("id", .integer)
+                t.column("capturedAt", .datetime).notNull()
+                t.column("fiveHourUsed", .double)
+                t.column("fiveHourResetsAt", .datetime)
+                t.column("sevenDayUsed", .double)
+                t.column("sevenDayResetsAt", .datetime)
+            }
+        }
+        migrator.registerMigration("v7-backlog") { db in
+            try db.create(table: "backlogItem") { t in
+                t.autoIncrementedPrimaryKey("id")
+                // Sem projeto o item some da tela, mas não do banco: remover o projeto da lista não apaga o backlog.
+                t.column("projectID", .integer).references("project", onDelete: .setNull)
+                t.column("number", .integer).notNull()
+                t.column("kind", .text).notNull()
+                t.column("title", .text).notNull()
+                t.column("detail", .text).notNull()
+                t.column("location", .text)
+                t.column("grade", .text)
+                t.column("priority", .text).notNull()
+                t.column("status", .text).notNull()
+                t.column("author", .text).notNull()
+                t.column("parentID", .integer).references("backlogItem", onDelete: .setNull)
+                t.column("externalRef", .text)
+                t.column("createdAt", .datetime).notNull()
+                t.column("updatedAt", .datetime).notNull()
+                t.uniqueKey(["projectID", "number"])
+            }
+            try db.create(index: "backlogItem_status", on: "backlogItem", columns: ["projectID", "kind", "status"])
+        }
+        migrator.registerMigration("v8-subject-activity") { db in
+            // Tipo de atividade em coluna (filtrar por tipo sem abrir o JSON); as etapas vão nas partes.
+            try db.alter(table: "subject") { t in t.add(column: "activity", .text) }
+        }
         return migrator
     }
 }

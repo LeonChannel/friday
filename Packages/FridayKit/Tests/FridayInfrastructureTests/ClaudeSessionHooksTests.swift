@@ -13,7 +13,7 @@ struct ClaudeSessionHooksTests {
         defer { dir.remove() }
         let locations = SensorLocations(root: dir.url)
         let session = AgentSessionID()
-        let hooks = ClaudeSessionHooks(locations: locations)
+        let hooks = ClaudeSessionHooks(locations: locations, home: dir.url.path)
 
         let settingsPath = locations.sessionsDirectory.appendingPathComponent("\(session).settings.json").path
         #expect(try hooks.extraArguments(agent: .claude, session: session) == ["--settings", settingsPath])
@@ -23,7 +23,7 @@ struct ClaudeSessionHooksTests {
     @Test func otherAgentsGetNothing() throws {
         let dir = try ShortTemporaryDirectory()
         defer { dir.remove() }
-        let hooks = ClaudeSessionHooks(locations: SensorLocations(root: dir.url))
+        let hooks = ClaudeSessionHooks(locations: SensorLocations(root: dir.url), home: dir.url.path)
         for agent in [AgentKind.shell, .codex] {
             #expect(try hooks.extraArguments(agent: agent, session: AgentSessionID()).isEmpty)
             #expect(try hooks.extraEnvironment(agent: agent, session: AgentSessionID()).isEmpty)
@@ -35,7 +35,7 @@ struct ClaudeSessionHooksTests {
         let dir = try ShortTemporaryDirectory()
         defer { dir.remove() }
         let locations = SensorLocations(root: dir.url)
-        let arguments = try ClaudeSessionHooks(locations: locations).extraArguments(agent: .claude, session: AgentSessionID())
+        let arguments = try ClaudeSessionHooks(locations: locations, home: dir.url.path).extraArguments(agent: .claude, session: AgentSessionID())
 
         let data = try Data(contentsOf: URL(fileURLWithPath: arguments[1]))
         let root = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
@@ -54,7 +54,7 @@ struct ClaudeSessionHooksTests {
         let dir = try ShortTemporaryDirectory()
         defer { dir.remove() }
         let locations = SensorLocations(root: dir.url)
-        let hooks = ClaudeSessionHooks(locations: locations)
+        let hooks = ClaudeSessionHooks(locations: locations, home: dir.url.path)
         let old = try hooks.extraArguments(agent: .claude, session: AgentSessionID())[1]
         let recent = try hooks.extraArguments(agent: .claude, session: AgentSessionID())[1]
         try FileManager.default.setAttributes([.modificationDate: Date(timeIntervalSinceNow: -8 * 24 * 3600)], ofItemAtPath: old)
@@ -69,7 +69,7 @@ struct ClaudeSessionHooksTests {
         defer { dir.remove() }
         let odd = dir.url.appendingPathComponent("Application Support/it's", isDirectory: true)
         let locations = SensorLocations(root: odd)
-        let data = try ClaudeSessionHooks(locations: locations).settingsData(script: odd.appendingPathComponent("s.sh"))
+        let data = try ClaudeSessionHooks(locations: locations, home: dir.url.path).settingsData(script: odd.appendingPathComponent("s.sh"))
         let text = String(decoding: data, as: UTF8.self)
         #expect(text.contains("it'\\\\''s"))
     }
@@ -77,7 +77,7 @@ struct ClaudeSessionHooksTests {
     @Test func eachSessionGetsItsOwnSettingsFile() throws {
         let dir = try ShortTemporaryDirectory()
         defer { dir.remove() }
-        let hooks = ClaudeSessionHooks(locations: SensorLocations(root: dir.url))
+        let hooks = ClaudeSessionHooks(locations: SensorLocations(root: dir.url), home: dir.url.path)
         let a = try hooks.extraArguments(agent: .claude, session: AgentSessionID())
         let b = try hooks.extraArguments(agent: .claude, session: AgentSessionID())
         #expect(a[1] != b[1])
@@ -89,7 +89,7 @@ struct ClaudeSessionHooksTests {
         let locations = SensorLocations(root: dir.url.appendingPathComponent("Application Support", isDirectory: true))
         let session = AgentSessionID()
         let project = Project(name: "p", path: "/p", kind: .folder, addedAt: .distantPast)
-        let planner = DefaultLaunchPlanner(userShell: "/bin/zsh", home: "/h", user: "u", language: "en_US.UTF-8", customizer: ClaudeSessionHooks(locations: locations))
+        let planner = DefaultLaunchPlanner(userShell: "/bin/zsh", home: "/h", user: "u", language: "en_US.UTF-8", customizer: ClaudeSessionHooks(locations: locations, home: dir.url.path))
         let plan = try planner.plan(agent: .claude, project: project, session: session)
 
         // Troca `exec claude` por um printf que mostra como o shell separou os argumentos.

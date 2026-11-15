@@ -32,9 +32,15 @@ public struct DefaultLaunchPlanner: LaunchPlanning {
 
     /// Receita da sessão: shell interativo de login e, para os agentes, `exec <comando>` dentro dele.
     public func plan(agent: AgentKind, project: Project, session: AgentSessionID) throws -> LaunchPlan {
+        try plan(agent: agent, project: project, session: session, initialPrompt: nil)
+    }
+
+    /// Receita com a primeira mensagem: para o Claude vira o argumento posicional (sessão interativa que já começa com ela).
+    public func plan(agent: AgentKind, project: Project, session: AgentSessionID, initialPrompt: String?) throws -> LaunchPlan {
         var arguments = ["-l", "-i"]
         if var command = Self.command(for: agent, session: session) {
             command += try customizer?.extraArguments(agent: agent, session: session) ?? []
+            if agent == .claude, let initialPrompt, !initialPrompt.isEmpty { command.append(initialPrompt) }
             arguments += ["-c", "exec " + command.map(Self.shellQuoted).joined(separator: " ")]
         }
         var environment = environment(agent: agent, session: session)

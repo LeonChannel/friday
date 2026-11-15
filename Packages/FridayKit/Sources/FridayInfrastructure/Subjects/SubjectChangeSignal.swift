@@ -1,5 +1,5 @@
-// Resumo: Aviso entre processos de que um assunto mudou no banco, para o app aberto atualizar quando a CLI escreve.
-// Tags: assuntos, persistencia
+// Resumo: Aviso entre processos de que a CLI gravou no banco (assunto ou backlog), para o app aberto atualizar.
+// Tags: assuntos, backlog, persistencia
 
 import Darwin
 import notify

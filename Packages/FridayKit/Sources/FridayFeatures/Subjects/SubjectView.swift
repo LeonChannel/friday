@@ -1,5 +1,5 @@
-// Resumo: Tela do assunto: "Onde você parou" à esquerda, o dossiê com as partes no centro e as trilhas embaixo, com o terminal do projeto como gaveta.
-// Tags: assuntos, interface
+// Resumo: Tela do assunto como lousa: etapas da jornada no topo, "Onde você parou" e o dossiê no centro, trilhas embaixo e o Claude no bastidor (gaveta).
+// Tags: assuntos, interface, jornadas
 
 import FridayDomain
 import SwiftUI
@@ -9,6 +9,7 @@ struct SubjectView: View {
     let model: SubjectModel
     @Environment(ProjectsModel.self) private var projects
     @Environment(WorkspaceModel.self) private var workspace
+    @Environment(AppSettings.self) private var settings
     @State private var showsResume = true
     @State private var showsTerminal = false
     @State private var errorMessage: String?
@@ -32,6 +33,10 @@ struct SubjectView: View {
         VStack(spacing: 0) {
             header(subject)
             Rectangle().fill(Theme.linha).frame(height: 1)
+            if subject.activity != nil {
+                StageBoard(activity: subject.activity, stages: subject.stages)
+                Rectangle().fill(Theme.linha).frame(height: 1)
+            }
             HStack(spacing: 0) {
                 if showsResume, let resume = model.resume {
                     ResumeColumn(resume: resume)
@@ -56,9 +61,15 @@ struct SubjectView: View {
                 .labelStyle(.iconOnly).buttonStyle(.friday)
             VStack(alignment: .leading, spacing: 2) {
                 Text(subject.title).typography(.tituloAssunto).foregroundStyle(Theme.texto).lineLimit(1)
-                MonoLabel("assunto \(subject.id ?? 0) · atualizado \(subject.updatedAt.formatted(.relative(presentation: .named)))")
+                MonoLabel(([subject.activity?.displayName.lowercased()].compactMap { $0 } + ["assunto \(subject.id ?? 0)", "atualizado \(subject.updatedAt.formatted(.relative(presentation: .named)))"]).joined(separator: " · "))
             }
             Spacer()
+            if let project = linkedProject(subject), subject.activity != nil, let id = subject.id,
+               workspace.terminals(for: project).runningSession(forSubject: id) == nil {
+                Button("Chamar o Claude") { startJourney(subject, in: project) }
+                    .buttonStyle(.friday)
+                    .help("Abre o Claude no bastidor com o briefing da jornada deste tipo")
+            }
             projectMenu(subject)
             if let turn = model.turn {
                 TurnBadge(TurnStyle(turn.holder), text: turn.reason)
@@ -88,16 +99,31 @@ struct SubjectView: View {
         .fixedSize()
     }
 
+    private func linkedProject(_ subject: Subject) -> Project? {
+        projects.projects.first { $0.id == subject.projectID }
+    }
+
+    /// Bastidor: o terminal do projeto, já na sessão do Claude deste assunto quando ela existe.
     @ViewBuilder
     private func drawer(_ subject: Subject) -> some View {
-        if let project = projects.projects.first(where: { $0.id == subject.projectID }) {
-            TerminalArea(model: workspace.terminals(for: project), sessionEnvironment: ["FRIDAY_ASSUNTO": "\(subject.id ?? 0)"])
+        if let project = linkedProject(subject) {
+            let terminals = workspace.terminals(for: project)
+            TerminalArea(model: terminals, sessionEnvironment: ["FRIDAY_ASSUNTO": "\(subject.id ?? 0)"])
+                .onAppear {
+                    if let id = subject.id, let session = terminals.runningSession(forSubject: id) { terminals.selection = session.id }
+                }
         } else {
-            Text("Este assunto não está ligado a um projeto. Ligue no menu do topo para abrir o terminal do Claude aqui.")
+            Text("Este assunto não está ligado a um projeto. Ligue no menu do topo para o Claude trabalhar nele.")
                 .typography(.secundario).foregroundStyle(Theme.textoSecundario)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Theme.fundo)
         }
+    }
+
+    private func startJourney(_ subject: Subject, in project: Project) {
+        guard let activity = subject.activity else { return }
+        // A jornada é relida (prompt e skills atuais); as etapas continuam as do assunto.
+        errorMessage = workspace.startJourney(subject: subject, journey: settings.journey(for: activity), project: project)
     }
 
     private func link(_ projectID: Int64?) {
@@ -261,7 +287,7 @@ struct Dossier: View {
     }
 }
 
-/// Trilhas: uma linha por frente com o trilho de passos, e o botão da gaveta do terminal.
+/// Trilhas: uma linha por frente com o trilho de passos, e o botão do bastidor (terminal do Claude).
 struct Tracks: View {
     let fronts: [Front]
     @Binding var showsTerminal: Bool
@@ -271,7 +297,7 @@ struct Tracks: View {
             HStack {
                 MonoLabel("Trilhas · \(fronts.count)", kind: .secao)
                 Spacer()
-                Button(showsTerminal ? "Fechar terminal" : "Abrir terminal", systemImage: "terminal") { showsTerminal.toggle() }
+                Button(showsTerminal ? "Fechar bastidor" : "Ver bastidor", systemImage: "terminal") { showsTerminal.toggle() }
                     .buttonStyle(.friday)
                     .keyboardShortcut("`", modifiers: .control)
                 MonoLabel("⌃`")

@@ -103,3 +103,27 @@ public struct Front: Codable, Equatable, Sendable {
     /// Primeiro passo ainda não feito, se houver.
     public var nextStep: String? { steps.first { !$0.isDone }?.text }
 }
+
+/// Em que ponto está uma etapa da jornada.
+public enum StageState: String, Codable, Sendable, CaseIterable {
+    case pending
+    case running
+    case waitingForYou
+    case done
+}
+
+/// Uma etapa da jornada do assunto, copiada da configuração quando o assunto nasce.
+public struct Stage: Codable, Equatable, Sendable {
+    public var name: String
+    public var state: StageState
+    /// O que saiu da etapa, em uma frase.
+    public var note: String?
+    public var updatedAt: Date?
+
+    public init(name: String, state: StageState = .pending, note: String? = nil, updatedAt: Date? = nil) {
+        self.name = name
+        self.state = state
+        self.note = note
+        self.updatedAt = updatedAt
+    }
+}

@@ -32,6 +32,11 @@ public struct GRDBProjectRepository: ProjectRepository {
         }
     }
 
+    /// Todos os projetos agora, sem observar (a CLI usa para achar o projeto de uma pasta).
+    public func all() throws -> [Project] {
+        try database.writer.read { db in try ProjectRecord.fetchAll(db).map(\.project) }
+    }
+
     public func contains(path: String) throws -> Bool {
         try database.writer.read { db in
             try ProjectRecord.filter(Column("path") == path).fetchCount(db) > 0

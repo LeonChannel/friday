@@ -1,5 +1,5 @@
-// Resumo: Liga o sensor: abre o socket dos hooks, decodifica cada mensagem recebida e grava o evento no banco.
-// Tags: sensor, persistencia
+// Resumo: Liga o sensor: abre o socket dos hooks, decodifica cada mensagem recebida e grava o evento (ou a cota vinda da statusline) no banco.
+// Tags: sensor, persistencia, cota
 
 import FridayDomain
 import Foundation
@@ -9,22 +9,37 @@ import os
 public actor SensorService {
     private let server: HookSocketServer
     private let repository: any AgentEventRepository
+    private let quotas: (any UsageQuotaRepository)?
     private let logger = Logger(subsystem: "com.leonchannel.friday", category: "sensor")
     private var task: Task<Void, Never>?
 
-    public init(server: HookSocketServer, repository: any AgentEventRepository) {
+    /// `quotas` recebe a cota que chega pela statusline; sem ele, essas mensagens são ignoradas.
+    public init(server: HookSocketServer, repository: any AgentEventRepository, quotas: (any UsageQuotaRepository)? = nil) {
         self.server = server
         self.repository = repository
+        self.quotas = quotas
     }
+
+    /// Cabeçalho das mensagens da statusline (`statusline <sessão>\n<JSON>`).
+    static let statuslinePrefix = Data("statusline ".utf8)
 
     /// Abre o socket e começa a gravar. Chamar de novo reinicia.
     public func start() async throws {
         task?.cancel()
         let messages = try await server.start()
         let repository = repository
+        let quotas = quotas
         let logger = logger
         task = Task {
             for await message in messages {
+                if message.data.starts(with: Self.statuslinePrefix) {
+                    guard let quotas, let newline = message.data.firstIndex(of: 0x0A),
+                          let quota = UsageQuota.decode(statusline: message.data[message.data.index(after: newline)...], capturedAt: message.receivedAt) else { continue }
+                    do { try quotas.save(quota) } catch {
+                        logger.error("falha ao gravar cota: \(String(describing: error), privacy: .public)")
+                    }
+                    continue
+                }
                 do {
                     let event = try AgentEventDecoder.decode(message.data, receivedAt: message.receivedAt)
                     try repository.record(event)

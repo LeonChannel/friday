@@ -1,5 +1,5 @@
-// Resumo: Executa os comandos `friday` (assunto, evidência, pergunta, decisão, frente, alternativa) contra o banco e devolve texto curto e estável.
-// Tags: assuntos, persistencia
+// Resumo: Executa os comandos `friday` (assunto, evidência, pergunta, decisão, frente, etapa, alternativa) contra o banco e devolve texto curto e estável.
+// Tags: assuntos, persistencia, jornadas
 
 import FridayDomain
 import FridayInfrastructure
@@ -34,6 +34,7 @@ public struct SubjectCommandRunner: Sendable {
           friday alternativa <id> "<nome>" --ganho "..." --risco "..." --esforco "..." --reversivel "..."
           friday decisao <id> "<decisão>" --porque "..." [--mudaria-se "..."] [--responde <n da pergunta>]
           friday frente <id> "<nome>" [--criterio "..."] [--estado rodando|esperando-voce|concluida] [--passo "..."]... [--feitos <n>]
+          friday etapa <id> <n> --estado pendente|rodando|esperando-voce|concluida [--nota "..."]
         """
 
     /// Roda um comando. Erro de uso ou de validação vira saída de erro e código diferente de zero.
@@ -61,6 +62,7 @@ public struct SubjectCommandRunner: Sendable {
         case "alternativa": return try alternative(rest)
         case "decisao": return try decision(rest)
         case "frente": return try front(rest)
+        case "etapa": return try stage(rest)
         case "ajuda", "--ajuda", "-h", "--help": return ok(Self.usage)
         default: throw UsageError(message: "Comando desconhecido: \(command).\n\(Self.usage)")
         }
@@ -198,5 +200,25 @@ public struct SubjectCommandRunner: Sendable {
         let saved = try repository.update(id: id) { _ = try $0.upsertFront(name: name, criterion: criterion, state: state, steps: steps, doneSteps: done, at: date) }
         let front = saved.fronts.first { $0.name.compare(name.trimmingCharacters(in: .whitespaces), options: .caseInsensitive) == .orderedSame }
         return ok("frente \"\(front?.name ?? name)\" no assunto \(id): \(SubjectMarkdown.stateLabel(front?.state ?? .running))", wrote: true)
+    }
+
+    private func stage(_ tokens: [String]) throws -> CommandOutcome {
+        let usage = "friday etapa <id> <n> --estado pendente|rodando|esperando-voce|concluida [--nota \"...\"]"
+        let args = try CommandLineArguments(tokens, valueOptions: ["--estado", "--nota"])
+        try args.requirePositionals(2, usage: usage)
+        let state: StageState
+        switch args.value("--estado") {
+        case "pendente": state = .pending
+        case "rodando": state = .running
+        case "esperando-voce": state = .waitingForYou
+        case "concluida": state = .done
+        default: throw UsageError(message: "--estado precisa ser pendente, rodando, esperando-voce ou concluida.\nUso: \(usage)")
+        }
+        let id = try subjectID(args.positionals[0])
+        guard let number = Int(args.positionals[1]) else { throw UsageError(message: "\"\(args.positionals[1])\" não é o número de uma etapa.") }
+        let note = args.value("--nota"), date = now()
+        let saved = try repository.update(id: id) { _ = try $0.setStage(number, state: state, note: note, at: date) }
+        let name = saved.stages[number - 1].name
+        return ok("etapa \(number) (\(name)) no assunto \(id): \(SubjectMarkdown.stageLabel(state))", wrote: true)
     }
 }

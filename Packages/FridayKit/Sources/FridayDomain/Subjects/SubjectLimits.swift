@@ -20,6 +20,8 @@ public enum SubjectLimits {
     public static let frontName = 60
     public static let frontCriterion = 160
     public static let frontStep = 100
+    public static let stageName = 40
+    public static let stageNote = 160
 
     /// Apara o texto e confere que não está vazio nem acima do teto.
     static func validated(_ text: String, field: String, limit: Int) throws -> String {
@@ -37,6 +39,7 @@ public enum SubjectError: LocalizedError, Equatable, Sendable {
     case unknownQuestion(Int)
     case frontNeedsCriterion(String)
     case subjectNotFound(Int64)
+    case unknownStage(Int)
 
     public var errorDescription: String? {
         switch self {
@@ -45,6 +48,7 @@ public enum SubjectError: LocalizedError, Equatable, Sendable {
         case .unknownQuestion(let id): "Não existe a pergunta \(id) neste assunto."
         case .frontNeedsCriterion(let name): "A frente \"\(name)\" é nova: informe o critério de conclusão."
         case .subjectNotFound(let id): "Não existe o assunto \(id)."
+        case .unknownStage(let n): "Não existe a etapa \(n) neste assunto."
         }
     }
 }

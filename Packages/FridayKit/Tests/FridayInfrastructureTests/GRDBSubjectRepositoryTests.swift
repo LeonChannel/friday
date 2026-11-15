@@ -96,4 +96,27 @@ struct GRDBSubjectRepositoryTests {
         SubjectChangeSignal.post()
         #expect(try await iterator.next()?.map(\.title) == ["Veio da CLI"])
     }
+
+    @Test func activityAndStagesRoundTrip() throws {
+        let repository = GRDBSubjectRepository(database: try .inMemory())
+        let saved = try repository.insert(try Subject(title: "Erro", activity: .error, stages: ["Reproduzir", "Causa"], createdAt: now))
+        let id = try #require(saved.id)
+        try repository.update(id: id) { try $0.setStage(1, state: .done, note: "reproduzido", at: now) }
+        let read = try #require(try repository.subject(id: id))
+        #expect(read.activity == .error)
+        #expect(read.stages.map(\.state) == [.done, .pending])
+        #expect(read.stages[0].note == "reproduzido")
+    }
+
+    @Test func subjectSavedBeforeJourneysReadsWithoutStages() throws {
+        let database = try AppDatabase.inMemory()
+        let repository = GRDBSubjectRepository(database: database)
+        let id = try #require(try repository.insert(try Subject(title: "Antigo", createdAt: now)).id)
+        // JSON das partes como era gravado antes das etapas.
+        try database.writer.write { db in
+            try db.execute(sql: #"UPDATE subject SET partsJSON = '{"alternatives":[],"decisions":[],"evidences":[],"fronts":[],"questions":[]}', activity = NULL WHERE id = ?"#, arguments: [id])
+        }
+        let read = try #require(try repository.subject(id: id))
+        #expect(read.stages.isEmpty && read.activity == nil)
+    }
 }
